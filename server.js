@@ -19,7 +19,8 @@ app.get('/', (req, res) => {
 // Video streaming endpoint
 app.get('/video/:filename', (req, res) => {
   const filename = req.params.filename;
-  const videoPath = path.join(__dirname, filename);
+  const videoPath = path.join(__dirname, 'assets', '1', filename);
+  
   
   // Check if file exists
   if (!fs.existsSync(videoPath)) {
@@ -62,6 +63,6 @@ app.get('/video/:filename', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Video server running on http://localhost:${PORT}`);
   console.log('Available videos:');
-  console.log('- inward.mp4');
-  console.log('- outward.mp4');
+  console.log('- assets/1/inward.mp4');
+  console.log('- assets/1/outward.mp4');
 });
