@@ -17,9 +17,10 @@ app.get('/', (req, res) => {
 });
 
 // Video streaming endpoint
-app.get('/video/:filename', (req, res) => {
+app.get('/video/:id/:filename', (req, res) => {
+  const id = req.params.id;
   const filename = req.params.filename;
-  const videoPath = path.join(__dirname, 'assets', '1', filename);
+  const videoPath = path.join(__dirname, 'assets', id, filename);
   
   
   // Check if file exists
@@ -60,9 +61,30 @@ app.get('/video/:filename', (req, res) => {
   }
 });
 
+// Metadata endpoint
+app.get('/metadata/:id', (req, res) => {
+  const id = req.params.id;
+  const metadataPath = path.join(__dirname, 'assets', id, 'metadata.json');
+  
+  // Check if metadata file exists
+  if (!fs.existsSync(metadataPath)) {
+    return res.status(404).json({ error: 'Metadata not found' });
+  }
+  
+  try {
+    const metadata = fs.readFileSync(metadataPath, 'utf8');
+    res.json(JSON.parse(metadata));
+  } catch (error) {
+    console.error('Error reading metadata:', error);
+    res.status(500).json({ error: 'Failed to read metadata' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Video server running on http://localhost:${PORT}`);
   console.log('Available videos:');
-  console.log('- assets/1/inward.mp4');
-  console.log('- assets/1/outward.mp4');
+  console.log('- /video/1/inward.mp4');
+  console.log('- /video/1/outward.mp4');
+  console.log('Available metadata:');
+  console.log('- /metadata/1');
 });
