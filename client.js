@@ -74,24 +74,11 @@ function loadVideos(id) {
     console.log(`Videos loaded for dataset ID: ${id}`);
 }
 
-// Function to load and display metadata
-async function loadAndDisplayMetadata(id) {
-    try {
-        const metadata = await getMetadata(id);
-        console.log('Metadata loaded:', metadata);
-        
-        // You can add UI elements to display metadata here
-        // For now, just log it to console
-        alert(`Metadata loaded for dataset ${id}. Check console for details.`);
-    } catch (error) {
-        alert(`Failed to load metadata for dataset ${id}: ${error.message}`);
-    }
-}
 
 // Set up event listeners
 document.addEventListener('DOMContentLoaded', () => {
     const loadVideosBtn = document.getElementById('load-videos');
-    const loadMetadataBtn = document.getElementById('load-metadata');
+    const showAnnotationsBtn = document.getElementById('show-annotations');
     const datasetIdInput = document.getElementById('dataset-id');
     
     loadVideosBtn.addEventListener('click', () => {
@@ -103,13 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    loadMetadataBtn.addEventListener('click', () => {
-        const id = datasetIdInput.value.trim();
-        if (id) {
-            loadAndDisplayMetadata(id);
-        } else {
-            alert('Please enter a dataset ID');
-        }
+    showAnnotationsBtn.addEventListener('click', () => {
+        // add code to show annotations
     });
     
     // Load default videos on page load

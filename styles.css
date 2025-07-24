@@ -130,7 +130,7 @@ canvas {
     background-color: #218838;
 }
 
-.load-metadata-button {
+.show-annotations-button {
     padding: 10px 20px;
     background-color: #17a2b8;
     color: white;
@@ -142,6 +142,6 @@ canvas {
     margin-left: 10px;
 }
 
-.load-metadata-button:hover {
+.show-annotations-button:hover {
     background-color: #138496;
 }
