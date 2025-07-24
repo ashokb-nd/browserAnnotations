@@ -52,7 +52,6 @@
  * @module VideoAnnotator
  */
 
-import { Utils } from "../../utils/utils.js";
 import { AnnotationManifest, Annotation } from "./annotation-manifest.js";
 import { BaseRenderer } from "./renderers/base-renderer.js";
 
@@ -130,7 +129,7 @@ class VideoAnnotator {
     this._setupEventListeners();
 
     if (this.options.debugMode) {
-      Utils.log("VideoAnnotator initialized");
+      console.log("VideoAnnotator initialized");
     }
   }
 
@@ -168,7 +167,7 @@ class VideoAnnotator {
     this._distributeAnnotationsToRenderers();
 
     if (this.options.debugMode) {
-      Utils.log(`Loaded ${this.manifest.count} annotations`);
+      console.log(`Loaded ${this.manifest.count} annotations`);
     }
 
     return true;
@@ -202,7 +201,7 @@ class VideoAnnotator {
     this._distributeAnnotationsToRenderers();
 
     if (this.options.debugMode) {
-      Utils.log(`Added annotation: ${annotationObj.id}`);
+      console.log(`Added annotation: ${annotationObj.id}`);
     }
   }
 
@@ -233,7 +232,7 @@ class VideoAnnotator {
     }
 
     if (this.options.debugMode) {
-      Utils.log("Cleared all annotations");
+      console.log("Cleared all annotations");
     }
   }
 
@@ -255,7 +254,7 @@ class VideoAnnotator {
     this.renderers.set(category, renderer);
 
     if (this.options.debugMode) {
-      Utils.log(`Registered renderer: ${category}`);
+      console.log(`Registered renderer: ${category}`);
     }
   }
 
@@ -272,7 +271,7 @@ class VideoAnnotator {
     this._startRenderLoop();
 
     if (this.options.debugMode) {
-      Utils.log("VideoAnnotator shown");
+      console.log("VideoAnnotator shown");
     }
   }
 
@@ -289,7 +288,7 @@ class VideoAnnotator {
     this._stopRenderLoop();
 
     if (this.options.debugMode) {
-      Utils.log("VideoAnnotator hidden");
+      console.log("VideoAnnotator hidden");
     }
   }
 
@@ -304,7 +303,7 @@ class VideoAnnotator {
     if (renderer) {
       renderer.show();
       if (this.options.debugMode) {
-        Utils.log(`Enabled renderer: ${rendererType}`);
+        console.log(`Enabled renderer: ${rendererType}`);
       }
       return true;
     }
@@ -322,7 +321,7 @@ class VideoAnnotator {
     if (renderer) {
       renderer.hide();
       if (this.options.debugMode) {
-        Utils.log(`Disabled renderer: ${rendererType}`);
+        console.log(`Disabled renderer: ${rendererType}`);
       }
       return true;
     }
@@ -389,7 +388,7 @@ class VideoAnnotator {
     this.manifest = null;
 
     if (this.options.debugMode) {
-      Utils.log("VideoAnnotator destroyed");
+      console.log("VideoAnnotator destroyed");
     }
   }
 
@@ -422,7 +421,7 @@ class VideoAnnotator {
     }
 
     if (this.options.debugMode) {
-      Utils.log(`Setup renderers for categories: ${categoriesWithAnnotations.join(', ')}`);
+      console.log(`Setup renderers for categories: ${categoriesWithAnnotations.join(', ')}`);
     }
   }
 
@@ -443,7 +442,7 @@ class VideoAnnotator {
         if (RendererClass.category) {
           VideoAnnotator._rendererMap[RendererClass.category] = RendererClass;
         } else if (this.options.debugMode) {
-          Utils.log(`Warning: Renderer ${RendererClass.name} does not have a static category property`);
+          console.log(`Warning: Renderer ${RendererClass.name} does not have a static category property`);
         }
       }
     }
@@ -467,7 +466,7 @@ class VideoAnnotator {
     }
 
     if (this.options.debugMode) {
-      Utils.log(`Warning: No renderer available for category '${category}'`);
+      console.log(`Warning: No renderer available for category '${category}'`);
     }
     return null;
   }
@@ -536,7 +535,7 @@ class VideoAnnotator {
     }
 
     if (this.options.debugMode) {
-      Utils.log("Distributed annotations to renderers");
+      console.log("Distributed annotations to renderers");
     }
   }
 

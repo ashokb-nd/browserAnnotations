@@ -23,12 +23,12 @@
  * await AnnotationManager.loadAnnotationsForAlert();
  */
 
-import { Utils } from "../../utils/utils.js";
 import { VideoAnnotator } from "./video-annotator.js";
-import { MetadataManager } from "../../services/metadata.js";
-import { MetadataToAnnotationConverter } from "../../services/metadata-to-annotation-converter.js";
-import { AppState } from "../../core/app-state.js";
-import { CONFIG } from "../../config/constants.js";
+// TODO: Add these imports when the services are implemented
+// import { MetadataManager } from "../../services/metadata.js";
+// import { MetadataToAnnotationConverter } from "../../services/metadata-to-annotation-converter.js";
+// import { AppState } from "../../core/app-state.js";
+// import { CONFIG } from "../../config/constants.js";
 
 
 
@@ -52,7 +52,7 @@ const AnnotationManager = {
 
   _attach_video_annotator(video) {
     if (!video || !(video instanceof HTMLVideoElement)) {
-      Utils.log("Warning: Attempted to attach annotator to non-video element", video);
+      console.log("Warning: Attempted to attach annotator to non-video element", video);
       return null;
     }
     
@@ -63,11 +63,16 @@ const AnnotationManager = {
   },
 
   async loadAnnotationsForAlert() {
+    // TODO: Implement when AppState, MetadataManager, etc. are available
+    console.log("loadAnnotationsForAlert() - TODO: Implement when dependencies are available");
+    return false;
+    
+    /*
     const alertId = AppState.notepad.currentAlertId;
     const detectors = CONFIG.ANNOTATIONS_CATEGORIES;
     
     if (!alertId) {
-      Utils.log("No current alert ID found in state");
+      console.log("No current alert ID found in state");
       return false;
     }
     
@@ -86,7 +91,7 @@ const AnnotationManager = {
     const videosWithAnnotators = Array.from(videos).filter(video => video.annotator);
     
     if (videosWithAnnotators.length === 0) {
-      Utils.log("No video annotators found");
+      console.log("No video annotators found");
       return false;
     }
 
@@ -97,8 +102,9 @@ const AnnotationManager = {
       loadedCount++;
     });
 
-    Utils.log(`Loaded ${manifest.count} annotations for alert ${alertId} on ${loadedCount} videos`);
+    console.log(`Loaded ${manifest.count} annotations for alert ${alertId} on ${loadedCount} videos`);
     return true;
+    */
   },
 
 // =================================
@@ -142,7 +148,7 @@ const AnnotationManager = {
         video.annotator.toggleRenderer(rendererType, enabled);
       }
     });
-    Utils.log(`Renderer ${rendererType} ${enabled ? 'enabled' : 'disabled'} for all videos`);
+    console.log(`Renderer ${rendererType} ${enabled ? 'enabled' : 'disabled'} for all videos`);
   },
 };
 

@@ -10,7 +10,7 @@
  * const annotations = Extractors.hello(metadata, options);
  */
 
-import { AnnotationManifest, Annotation } from '../features/annotations/annotation-manifest.js';
+import { AnnotationManifest, Annotation } from './annotation-manifest.js';
 import { dsf_extractor } from './extractors-folder/DSF_extractor.js';
 
 

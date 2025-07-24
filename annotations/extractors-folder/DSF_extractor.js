@@ -1,6 +1,6 @@
 
 
-import { Annotation } from "../../features/annotations/annotation-manifest.js";
+import { Annotation } from "../annotation-manifest.js";
 
 function _getLaneCalMessage(metadata) {
 

@@ -1,3 +1,5 @@
+import { MetadataToAnnotationConverter } from './annotations/metadata-to-annotation-converter.js';
+
 // Function to set up canvas drawing for a video
 function setupVideoCanvas(videoId, canvasId) {
     const video = document.getElementById(videoId);
