@@ -1,4 +1,52 @@
 import { MetadataToAnnotationConverter } from './annotations/metadata-to-annotation-converter.js';
+import { VideoAnnotator } from './annotations/video-annotator.js';
+
+// Function to draw annotations from VideoAnnotator onto a canvas
+function drawAnnotationsOnCanvas(annotator, ctx, canvas, currentTimeMs) {
+    // Get video rectangle for coordinate transformation
+    const videoRect = {
+        width: canvas.width,
+        height: canvas.height
+    };
+    
+    // Iterate through all renderers and their annotations
+    for (const [category, renderer] of annotator.renderers) {
+        // Get annotations for this renderer that are visible at current time
+        const annotations = renderer._annotations.filter(annotation => {
+            if (!annotation.timeRange) return false;
+            return currentTimeMs >= annotation.timeRange.startMs && 
+                   currentTimeMs <= annotation.timeRange.endMs;
+        });
+        
+        // Render each visible annotation using the renderer's logic
+        for (const annotation of annotations) {
+            try {
+                // Save canvas state
+                ctx.save();
+                
+                // Create a temporary renderer context that uses our canvas
+                const originalCanvas = renderer._canvas;
+                const originalCtx = renderer._ctx;
+                
+                // Temporarily assign our canvas and context
+                renderer._canvas = canvas;
+                renderer._ctx = ctx;
+                
+                // Call the renderer's render method
+                renderer.render(annotation, currentTimeMs, videoRect);
+                
+                // Restore original canvas and context
+                renderer._canvas = originalCanvas;
+                renderer._ctx = originalCtx;
+                
+                // Restore canvas state
+                ctx.restore();
+            } catch (error) {
+                console.error(`Error rendering annotation ${annotation.id} on canvas:`, error);
+            }
+        }
+    }
+}
 
 // Function to set up canvas drawing for a video
 function setupVideoCanvas(videoId, canvasId) {
@@ -17,7 +65,17 @@ function setupVideoCanvas(videoId, canvasId) {
         canvas.style.height = video.offsetHeight + 'px';
 
         function drawFrame(now, metadata) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // Draw the current video frame 
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw the current video frame 
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Draw annotations if annotator exists and is visible
+            if (video.annotator && video.annotator.isVisible) {
+                drawAnnotationsOnCanvas(video.annotator, ctx, canvas, video.currentTime * 1000);
+            }
+            
             video.requestVideoFrameCallback(drawFrame); // Request the next frame
         }
 
@@ -30,6 +88,9 @@ function setupVideoCanvas(videoId, canvasId) {
         window.addEventListener("resize", () => {
             canvas.style.width = video.offsetWidth + 'px';
             canvas.style.height = video.offsetHeight + 'px';
+            // Update canvas resolution to match new size
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
         });
     });
 }
@@ -77,8 +138,47 @@ function loadVideos(id) {
 }
 
 
+function draw_annotations(annotation_manifest) {
+    // Get the video elements, not canvas elements
+    const inwardVideoElement = document.getElementById("inward-video");
+    const outwardVideoElement = document.getElementById("outward-video");
+
+    const inward_annotator = inwardVideoElement.annotator;
+    const outward_annotator = outwardVideoElement.annotator;
+
+    console.log(annotation_manifest);
+    inward_annotator.loadManifest(annotation_manifest);
+    // Don't show the annotator's own canvases - we'll render on our main canvases instead
+    inward_annotator.isVisible = true; // Set visibility flag but don't show canvases
+    
+    outward_annotator.loadManifest(annotation_manifest);
+    // Don't show the annotator's own canvases - we'll render on our main canvases instead  
+    outward_annotator.isVisible = true; // Set visibility flag but don't show canvases
+
+    console.log('Annotations loaded and ready to render on main canvases');
+}
+
+
+function setupVideoAnnotators(){
+    const inwardVideoElement = document.getElementById("inward-video");
+    const outwardVideoElement = document.getElementById("outward-video");
+
+    const inward_annotator = new VideoAnnotator(inwardVideoElement);
+    const outward_annotator = new VideoAnnotator(outwardVideoElement);
+
+    // Attach annotators to the video elements so they can be accessed later
+    inwardVideoElement.annotator = inward_annotator;
+    outwardVideoElement.annotator = outward_annotator;
+
+    console.log('Video annotators initialized');
+}
+
+
 // Set up event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize video annotators
+    setupVideoAnnotators();
+    
     const loadVideosBtn = document.getElementById('load-videos');
     const showAnnotationsBtn = document.getElementById('show-annotations');
     const datasetIdInput = document.getElementById('dataset-id');
@@ -94,11 +194,30 @@ document.addEventListener('DOMContentLoaded', () => {
     
     showAnnotationsBtn.addEventListener('click', () => {
         // add code to show annotations
+        const id = datasetIdInput.value.trim();
+        if (id) {
+            getMetadata(id)
+                .then(metadata => {
+                    const annotation_manifest = MetadataToAnnotationConverter.convertToManifest(metadata,['dsf','cross']);
+                    console.log('Annotations:', annotation_manifest);
+                    // Here you can add code to display the annotations in the UI
+                    draw_annotations(annotation_manifest);
+
+
+                })
+                .catch(error => {
+                    console.error('Error fetching or converting metadata:', error);
+                });
+        }
+        else {
+            alert('Please enter a dataset ID to show annotations');
+        }
     });
     
     // Load default videos on page load
     loadVideos('1');
 });
+
 
 // Set up canvas drawing for both videos
 setupVideoCanvas("inward-video", "inward-canvas");
