@@ -137,13 +137,21 @@ export class HeaderBanner extends BaseRenderer {
 
     // Position at top right
     const rightSideX = bannerWidth - options.Padding;
+    const textY = bannerY + options.Padding;
     
-    // Draw Date/Time (top right)
-    ctx.fillStyle = options.TextColor;
+    // Set font and text alignment
     ctx.font = options.DateTimeFont;
     ctx.textAlign = "right";
     ctx.textBaseline = "top";
-    ctx.fillText(formattedDateTime, rightSideX, bannerY + options.Padding);
+    
+    // Add text stroke (outline) for better contrast against any background
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 4;
+    ctx.strokeText(formattedDateTime, rightSideX, textY);
+    
+    // Draw the main white text
+    ctx.fillStyle = options.TextColor;
+    ctx.fillText(formattedDateTime, rightSideX, textY);
   }
 
   render(ctx, currentTimeMs, videoRect) {
