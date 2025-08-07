@@ -11,7 +11,9 @@ import { BaseRenderer } from "./renderers/base-renderer.js";
 
 // import renderers
 import { CrossRenderer } from "./renderers/debug-cross.js";
-
+import { InertialBarRenderer } from "./renderers/inertial-bar.js";
+import { DSFRenderer } from "./renderers/dsf-renderer.js";
+import {HeaderBanner} from "./renderers/header.js";
 
 // import { DetectionRenderer } from "./renderers/detection-renderer.js";
 // import { TextRenderer } from "./renderers/text-renderer.js";
@@ -23,7 +25,10 @@ import { CrossRenderer } from "./renderers/debug-cross.js";
 
 
 const RENDER_MAP = {
-  "debug-cross": CrossRenderer
+  "debug-cross": CrossRenderer,
+  "inertial-bar": InertialBarRenderer,
+  "dsf": DSFRenderer,
+  "header-banner": HeaderBanner,
 };
 
 
@@ -64,7 +69,7 @@ class VideoAnnotator {
     //intialize the renderers and 
     // share the corresponding annotations with them.
   _initializeRenderers(rendererCategories) {
-    // console.log(rendererCategories);
+    console.log(rendererCategories);
     for (const category of rendererCategories) {
       const RendererClass = RENDER_MAP[category];
       if (!RendererClass) {
@@ -76,7 +81,7 @@ class VideoAnnotator {
       const annotations = this.annotationManifest.items[category] || [];
 
       const renderer = new RendererClass( annotations); //Renderer intialization
-      // console.log(`Initialized renderer for category: ${category}`, renderer);
+      console.log(`Initialized renderer for category: ${category}`, renderer);
       this.renderers.push(renderer);
     }
   }
@@ -121,7 +126,7 @@ class VideoAnnotator {
     }
     this._lastRenderTime = currentTime;
 
-    console.log(`VideoAnnotator._render called - isVisible: ${this.isVisible}, renderers count: ${this.renderers.length}`);
+    // console.log(`VideoAnnotator._render called - isVisible: ${this.isVisible}, renderers count: ${this.renderers.length}`);
 
     if (this.isVisible) {
         // 2. Clear the canvas

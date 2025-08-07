@@ -1,42 +1,42 @@
 import { MetadataToAnnotationConverter } from './annotations/metadata-to-annotation-converter.js';
 import { VideoAnnotator } from './annotations/video-annotator.js';
 
-// Function to draw annotations from VideoAnnotator onto a canvas
-function drawAnnotationsOnCanvas(annotator, ctx, canvas, currentTimeMs) {
-    // Get video rectangle for coordinate transformation
-    const videoRect = {
-        width: canvas.width,
-        height: canvas.height
-    };
+// // Function to draw annotations from VideoAnnotator onto a canvas
+// function drawAnnotationsOnCanvas(annotator, ctx, canvas, currentTimeMs) {
+//     // Get video rectangle for coordinate transformation
+//     const videoRect = {
+//         width: canvas.width,
+//         height: canvas.height
+//     };
     
-    // Iterate through all renderers (now an array, not a Map)
-    for (const renderer of annotator.renderers) {
-        try {
-            // Save canvas state
-            ctx.save();
+//     // Iterate through all renderers (now an array, not a Map)
+//     for (const renderer of annotator.renderers) {
+//         try {
+//             // Save canvas state
+//             ctx.save();
             
-            // Create a temporary renderer context that uses our canvas
-            const originalCanvas = renderer.canvas;
-            const originalCtx = renderer.ctx;
+//             // Create a temporary renderer context that uses our canvas
+//             const originalCanvas = renderer.canvas;
+//             const originalCtx = renderer.ctx;
             
-            // Temporarily assign our canvas and context
-            renderer.canvas = canvas;
-            renderer.ctx = ctx;
+//             // Temporarily assign our canvas and context
+//             renderer.canvas = canvas;
+//             renderer.ctx = ctx;
             
-            // Call the renderer's render method with the new signature
-            renderer.render(currentTimeMs, videoRect);
+//             // Call the renderer's render method with the new signature
+//             renderer.render(currentTimeMs, videoRect);
             
-            // Restore original canvas and context
-            renderer.canvas = originalCanvas;
-            renderer.ctx = originalCtx;
+//             // Restore original canvas and context
+//             renderer.canvas = originalCanvas;
+//             renderer.ctx = originalCtx;
             
-            // Restore canvas state
-            ctx.restore();
-        } catch (error) {
-            console.error(`Error rendering with renderer:`, error);
-        }
-    }
-}
+//             // Restore canvas state
+//             ctx.restore();
+//         } catch (error) {
+//             console.error(`Error rendering with renderer:`, error);
+//         }
+//     }
+// }
 
 // Function to set up video frame canvas (separate from annotations)
 function setupVideoFrameCanvas(videoId, videoCanvasId) {
@@ -212,13 +212,13 @@ function setupVideoAnnotatorsWithManifest(annotation_manifest){
     const inward_annotator = new VideoAnnotator(inwardVideoElement,
         annotation_manifest,
         inwardCanvas,
-        ["debug-cross"]
+        ["debug-cross", "inertial-bar", "header-banner"] // categories for renderers
     );
 
     const outward_annotator = new VideoAnnotator(outwardVideoElement,
         annotation_manifest,
         outwardCanvas,
-        ["debug-cross"]
+        ["debug-cross", "inertial-bar", "header-banner"] // categories for renderers
     );
 
 }
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (id) {
             getMetadata(id)
                 .then(metadata => {
-                    const annotation_manifest = MetadataToAnnotationConverter.convertToManifest(metadata,['dsf','cross']);
+                    const annotation_manifest = MetadataToAnnotationConverter.convertToManifest(metadata,['dsf','cross','inertial-bar','header-banner']); // categories for extractor
                     console.log('Annotations:', annotation_manifest);
                     
                     // Reinitialize video annotators with the actual annotation manifest

@@ -11,6 +11,8 @@
  */
 
 import { AnnotationManifest, Annotation } from './annotation-manifest.js';
+import { dsf_extractor } from './extractors-folder/dsf-extractor.js';
+
 
 
 //  * const detection = new Annotation({
@@ -97,6 +99,14 @@ const Extractors = {
 
 
   // Add more extractor functions as needed
+
+  inertialBar(video_metadata, options) {
+  },
+
+  dsf(video_metadata, options) {
+    return dsf_extractor(video_metadata);
+  },
+
 };
 
 export {Extractors};

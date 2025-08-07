@@ -12,7 +12,7 @@ export class CrossRenderer extends BaseRenderer {
   }
 
   render(ctx, currentTimeMs, videoRect) {
-    console.log('debug-cross renderer called with:', { currentTimeMs, videoRect, annotationsCount: this.annotations.length });
+    // console.log('debug-cross renderer called with:', { currentTimeMs, videoRect, annotationsCount: this.annotations.length });
 
     // Save context
     ctx.save();
