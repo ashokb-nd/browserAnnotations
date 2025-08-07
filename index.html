@@ -27,9 +27,12 @@
                         Your browser does not support the video tag.
                     </video>
                 </div>
-                <div class="canvas-wrapper">
+                <div class="canvas-container">
                     <div class="canvas-title">Canvas Output</div>
-                    <canvas id="inward-canvas"></canvas>
+                    <div class="overlay-canvases">
+                        <canvas id="inward-video-canvas" class="video-frame-canvas"></canvas>
+                        <canvas id="inward-canvas" class="annotation-canvas"></canvas>
+                    </div>
                 </div>
                 <div style="text-align: center;">
                     <a href="" id="inward-download" class="download-link" download>Download Inward Video</a>
@@ -44,9 +47,12 @@
                         Your browser does not support the video tag.
                     </video>
                 </div>
-                <div class="canvas-wrapper">
+                <div class="canvas-container">
                     <div class="canvas-title">Canvas Output</div>
-                    <canvas id="outward-canvas"></canvas>
+                    <div class="overlay-canvases">
+                        <canvas id="outward-video-canvas" class="video-frame-canvas"></canvas>
+                        <canvas id="outward-canvas" class="annotation-canvas"></canvas>
+                    </div>
                 </div>
                 <div style="text-align: center;">
                     <a href="" id="outward-download" class="download-link" download>Download Outward Video</a>

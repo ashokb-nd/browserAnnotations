@@ -9,46 +9,78 @@ function drawAnnotationsOnCanvas(annotator, ctx, canvas, currentTimeMs) {
         height: canvas.height
     };
     
-    // Iterate through all renderers and their annotations
-    for (const [category, renderer] of annotator.renderers) {
-        // Get annotations for this renderer that are visible at current time
-        const annotations = renderer._annotations.filter(annotation => {
-            if (!annotation.timeRange) return false;
-            return currentTimeMs >= annotation.timeRange.startMs && 
-                   currentTimeMs <= annotation.timeRange.endMs;
-        });
-        
-        // Render each visible annotation using the renderer's logic
-        for (const annotation of annotations) {
-            try {
-                // Save canvas state
-                ctx.save();
-                
-                // Create a temporary renderer context that uses our canvas
-                const originalCanvas = renderer._canvas;
-                const originalCtx = renderer._ctx;
-                
-                // Temporarily assign our canvas and context
-                renderer._canvas = canvas;
-                renderer._ctx = ctx;
-                
-                // Call the renderer's render method
-                renderer.render(annotation, currentTimeMs, videoRect);
-                
-                // Restore original canvas and context
-                renderer._canvas = originalCanvas;
-                renderer._ctx = originalCtx;
-                
-                // Restore canvas state
-                ctx.restore();
-            } catch (error) {
-                console.error(`Error rendering annotation ${annotation.id} on canvas:`, error);
-            }
+    // Iterate through all renderers (now an array, not a Map)
+    for (const renderer of annotator.renderers) {
+        try {
+            // Save canvas state
+            ctx.save();
+            
+            // Create a temporary renderer context that uses our canvas
+            const originalCanvas = renderer.canvas;
+            const originalCtx = renderer.ctx;
+            
+            // Temporarily assign our canvas and context
+            renderer.canvas = canvas;
+            renderer.ctx = ctx;
+            
+            // Call the renderer's render method with the new signature
+            renderer.render(currentTimeMs, videoRect);
+            
+            // Restore original canvas and context
+            renderer.canvas = originalCanvas;
+            renderer.ctx = originalCtx;
+            
+            // Restore canvas state
+            ctx.restore();
+        } catch (error) {
+            console.error(`Error rendering with renderer:`, error);
         }
     }
 }
 
-// Function to set up canvas drawing for a video
+// Function to set up video frame canvas (separate from annotations)
+function setupVideoFrameCanvas(videoId, videoCanvasId) {
+    const video = document.getElementById(videoId);
+    const videoCanvas = document.getElementById(videoCanvasId);
+    const videoCtx = videoCanvas.getContext("2d");
+
+    video.addEventListener("loadedmetadata", () => {
+        // Set canvas internal resolution to video resolution
+        videoCanvas.width = video.videoWidth;
+        videoCanvas.height = video.videoHeight;
+        
+        // Set canvas display size to match video display size
+        videoCanvas.style.width = video.offsetWidth + 'px';
+        videoCanvas.style.height = video.offsetHeight + 'px';
+
+        // ====== function to draw video frames onto the video canvas ======
+        function drawVideoFrame(now, metadata) {
+            // Clear the video canvas
+            videoCtx.clearRect(0, 0, videoCanvas.width, videoCanvas.height);
+            
+            // Draw the current video frame to the video canvas
+            videoCtx.drawImage(video, 0, 0, videoCanvas.width, videoCanvas.height);
+            
+            video.requestVideoFrameCallback(drawVideoFrame); // Request the next frame
+        }
+
+        // Start drawing video frames when video plays
+        video.addEventListener("play", () => {
+            video.requestVideoFrameCallback(drawVideoFrame);
+        });
+        
+        // Update canvas display size when window resizes
+        window.addEventListener("resize", () => {
+            videoCanvas.style.width = video.offsetWidth + 'px';
+            videoCanvas.style.height = video.offsetHeight + 'px';
+            // Update canvas resolution to match new size
+            videoCanvas.width = video.videoWidth;
+            videoCanvas.height = video.videoHeight;
+        });
+    });
+}
+
+// Function to set up annotation canvas (no video frame drawing)
 function setupVideoCanvas(videoId, canvasId) {
     const video = document.getElementById(videoId);
     const canvas = document.getElementById(canvasId);
@@ -60,30 +92,9 @@ function setupVideoCanvas(videoId, canvasId) {
         canvas.height = video.videoHeight;
         
         // Set canvas display size to match video display size
-        const videoRect = video.getBoundingClientRect();
         canvas.style.width = video.offsetWidth + 'px';
         canvas.style.height = video.offsetHeight + 'px';
 
-        function drawFrame(now, metadata) {
-            // Clear the canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw the current video frame 
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Draw annotations if annotator exists and is visible
-            if (video.annotator && video.annotator.isVisible) {
-                drawAnnotationsOnCanvas(video.annotator, ctx, canvas, video.currentTime * 1000);
-            }
-            
-            video.requestVideoFrameCallback(drawFrame); // Request the next frame
-        }
-
-        // Start drawing frames when video plays
-        video.addEventListener("play", () => {
-            video.requestVideoFrameCallback(drawFrame);
-        });
-        
         // Update canvas display size when window resizes
         window.addEventListener("resize", () => {
             canvas.style.width = video.offsetWidth + 'px';
@@ -138,46 +149,85 @@ function loadVideos(id) {
 }
 
 
-function draw_annotations(annotation_manifest) {
-    // Get the video elements, not canvas elements
-    const inwardVideoElement = document.getElementById("inward-video");
-    const outwardVideoElement = document.getElementById("outward-video");
+// function draw_annotations(annotation_manifest) {
+//     // Get the video elements, not canvas elements
+//     const inwardVideoElement = document.getElementById("inward-video");
+//     const outwardVideoElement = document.getElementById("outward-video");
 
-    const inward_annotator = inwardVideoElement.annotator;
-    const outward_annotator = outwardVideoElement.annotator;
+//     const inward_annotator = inwardVideoElement.annotator;
+//     const outward_annotator = outwardVideoElement.annotator;
 
-    console.log(annotation_manifest);
-    inward_annotator.loadManifest(annotation_manifest);
-    // Don't show the annotator's own canvases - we'll render on our main canvases instead
-    inward_annotator.isVisible = true; // Set visibility flag but don't show canvases
+//     console.log('Setting visibility for annotators with manifest:', annotation_manifest);
     
-    outward_annotator.loadManifest(annotation_manifest);
-    // Don't show the annotator's own canvases - we'll render on our main canvases instead  
-    outward_annotator.isVisible = true; // Set visibility flag but don't show canvases
+//     // Set visibility flag to enable rendering
+//     inward_annotator.isVisible = true;
+//     outward_annotator.isVisible = true;
 
-    console.log('Annotations loaded and ready to render on main canvases');
-}
+//     console.log('Annotations ready to render');
+// }
 
 
-function setupVideoAnnotators(){
+
+// function setupVideoAnnotators(){
+//     const inwardVideoElement = document.getElementById("inward-video");
+//     const outwardVideoElement = document.getElementById("outward-video");
+
+//     // Create empty annotation manifest for initial setup
+//     const annotation_manifest = {
+//         items: {
+//             "debug-cross": []
+//         }
+//     };
+
+//     const inwardCanvas = document.getElementById("inward-canvas");
+//     const outwardCanvas = document.getElementById("outward-canvas");
+
+//     const inward_annotator = new VideoAnnotator(inwardVideoElement,
+//         annotation_manifest,
+//         inwardCanvas,
+//         ["debug-cross"]
+//     );
+
+//     const outward_annotator = new VideoAnnotator(outwardVideoElement,
+//         annotation_manifest,
+//         outwardCanvas,
+//         ["debug-cross"]
+//     );
+
+//     // Attach annotators to the video elements so they can be accessed later
+//     inwardVideoElement.annotator = inward_annotator;
+//     outwardVideoElement.annotator = outward_annotator;
+
+//     console.log('Video annotators initialized with empty manifest');
+// }
+
+function setupVideoAnnotatorsWithManifest(annotation_manifest){
     const inwardVideoElement = document.getElementById("inward-video");
     const outwardVideoElement = document.getElementById("outward-video");
 
-    const inward_annotator = new VideoAnnotator(inwardVideoElement);
-    const outward_annotator = new VideoAnnotator(outwardVideoElement);
+    const inwardCanvas = document.getElementById("inward-canvas");
+    const outwardCanvas = document.getElementById("outward-canvas");
 
-    // Attach annotators to the video elements so they can be accessed later
-    inwardVideoElement.annotator = inward_annotator;
-    outwardVideoElement.annotator = outward_annotator;
+    // Create new annotators with the actual annotation manifest
+    const inward_annotator = new VideoAnnotator(inwardVideoElement,
+        annotation_manifest,
+        inwardCanvas,
+        ["debug-cross"]
+    );
 
-    console.log('Video annotators initialized');
+    const outward_annotator = new VideoAnnotator(outwardVideoElement,
+        annotation_manifest,
+        outwardCanvas,
+        ["debug-cross"]
+    );
+
 }
 
 
 // Set up event listeners
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize video annotators
-    setupVideoAnnotators();
+    // setupVideoAnnotators();
     
     const loadVideosBtn = document.getElementById('load-videos');
     const showAnnotationsBtn = document.getElementById('show-annotations');
@@ -192,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    showAnnotationsBtn.addEventListener('click', () => {
+        showAnnotationsBtn.addEventListener('click', () => {
         // add code to show annotations
         const id = datasetIdInput.value.trim();
         if (id) {
@@ -200,10 +250,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(metadata => {
                     const annotation_manifest = MetadataToAnnotationConverter.convertToManifest(metadata,['dsf','cross']);
                     console.log('Annotations:', annotation_manifest);
-                    // Here you can add code to display the annotations in the UI
-                    draw_annotations(annotation_manifest);
-
-
+                    
+                    // Reinitialize video annotators with the actual annotation manifest
+                    setupVideoAnnotatorsWithManifest(annotation_manifest);
+                    
+                    // Enable rendering
+                    // draw_annotations(annotation_manifest);
                 })
                 .catch(error => {
                     console.error('Error fetching or converting metadata:', error);
@@ -212,13 +264,15 @@ document.addEventListener('DOMContentLoaded', () => {
         else {
             alert('Please enter a dataset ID to show annotations');
         }
-    });
-    
-    // Load default videos on page load
+    });    // Load default videos on page load
     loadVideos('1');
 });
 
 
-// Set up canvas drawing for both videos
+// Set up canvas drawing for both videos (annotations only)
 setupVideoCanvas("inward-video", "inward-canvas");
 setupVideoCanvas("outward-video", "outward-canvas");
+
+// Set up video frame drawing for both videos (video frames only)
+setupVideoFrameCanvas("inward-video", "inward-video-canvas");
+setupVideoFrameCanvas("outward-video", "outward-video-canvas");

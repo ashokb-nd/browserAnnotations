@@ -3,9 +3,33 @@
 // It handles video time updates, resizing, and rendering annotations.
 
 
+
+import { AnnotationManifest, Annotation } from "./annotation-manifest.js";
+import { BaseRenderer } from "./renderers/base-renderer.js";
+
+
+
+// import renderers
+import { CrossRenderer } from "./renderers/debug-cross.js";
+
+
+// import { DetectionRenderer } from "./renderers/detection-renderer.js";
+// import { TextRenderer } from "./renderers/text-renderer.js";
+// import { GraphRenderer } from "./renderers/graph-renderer.js";
+// import { TrajectoryRenderer } from "./renderers/trajectory-renderer.js";
+// import { HelloRenderer } from "./renderers/hello-renderer.js";
+// import { DSFRenderer } from "./renderers/dsf-renderer.js";
+
+
+
+const RENDER_MAP = {
+  "debug-cross": CrossRenderer
+};
+
+
 class VideoAnnotator {
   constructor(videoElement,
-            annotationManifest,
+            annotationManifest, // json
             canvas,
             rendererCategories = [],
             options = {}) {
@@ -23,21 +47,39 @@ class VideoAnnotator {
     // Default options with overrides
     this.options = {
       debugMode: false,
+      copy_video: true, // Copy video frame to canvas before rendering annotations
       ...options,
     };
 
-    this.isVisible = false;
+    this.isVisible = true;
     this._lastRenderTime = -1;
 
     // State management
-    this.renderers = null;
-    this._initializeRenderers();
+    this.renderers = [];
+    this._initializeRenderers(this.rendererCategories);
+
     this._setupEventListeners();
   }
 
-  _initializeRenderers() {
-    // implement it
-}
+    //intialize the renderers and 
+    // share the corresponding annotations with them.
+  _initializeRenderers(rendererCategories) {
+    console.log(rendererCategories);
+    for (const category of rendererCategories) {
+      const RendererClass = RENDER_MAP[category];
+      if (!RendererClass) {
+        console.warn(`Renderer for category "${category}" not found.`);
+        continue;
+      }
+
+      // get the annotations list for this category
+      const annotations = this.annotationManifest.items[category] || [];
+
+      const renderer = new RendererClass(this.canvas, annotations);
+      console.log(`Initialized renderer for category: ${category}`, renderer);
+      this.renderers.push(renderer);
+    }
+  }
 
 
   _setupEventListeners() {
@@ -64,13 +106,14 @@ class VideoAnnotator {
   }
 
   _resize() {
-        //pass
-        // Resizing is not done by VideoAnnotator.
-        // the frontend handles it.
+
+    this.canvas.width = this.video.videoWidth;
+    this.canvas.height = this.video.videoHeight;
     }
 
     // pass render signal to the renderers
   _render() {
+    console.log("VideoAnnotator._render called");
     // 1. update the current time
     const currentTime = this.video.currentTime;
     if (this._lastRenderTime === currentTime) {
@@ -78,13 +121,27 @@ class VideoAnnotator {
     }
     this._lastRenderTime = currentTime;
 
-    // 2. handle clearing the canvas
-    // === to be implemented ===
+    console.log(`VideoAnnotator._render called - isVisible: ${this.isVisible}, renderers count: ${this.renderers.length}`);
 
-    // 3. call render on each renderer
-    if (!this.isVisible) {
+    if (this.isVisible) {
+        // 2. Clear the canvas
+        // this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // // 3. Copy video frame to canvas if enabled
+        // if (this.options.copy_video) {
+        //     this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+        // }
+
+        // 4. Call render on each renderer
+        const currentTimeMs = currentTime * 1000;
+        const videoRect = {
+            width: this.canvas.width,
+            height: this.canvas.height
+        };
+        
+        console.log(`Calling render on ${this.renderers.length} renderers`);
         for(const renderer of this.renderers) {
-          renderer._render();
+          renderer.render(currentTimeMs, videoRect);
         }
     }
 }
