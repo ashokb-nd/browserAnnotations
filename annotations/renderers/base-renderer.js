@@ -1,15 +1,15 @@
 
+// a new renderer should extend this class
+// and implement the render method
+// it can also override getDefaultOptions to provide custom options
+// the render method will be called with the current time in milliseconds and the video rectangle dimensions
 export class BaseRenderer {
     static category = "base";
-  constructor(canvas,
-    annotations
-  ) {
+  constructor(annotations) {
 
-    this.canvas = canvas;
     this.annotations = annotations;
-    this.ctx = canvas.getContext("2d");
     }
-  render(currentTimeMs,videoRect) {
+  render(ctx, currentTimeMs, videoRect) {
     throw new Error("render() method must be implemented by subclasses");
   }
 

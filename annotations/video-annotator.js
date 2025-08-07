@@ -64,7 +64,7 @@ class VideoAnnotator {
     //intialize the renderers and 
     // share the corresponding annotations with them.
   _initializeRenderers(rendererCategories) {
-    console.log(rendererCategories);
+    // console.log(rendererCategories);
     for (const category of rendererCategories) {
       const RendererClass = RENDER_MAP[category];
       if (!RendererClass) {
@@ -75,8 +75,8 @@ class VideoAnnotator {
       // get the annotations list for this category
       const annotations = this.annotationManifest.items[category] || [];
 
-      const renderer = new RendererClass(this.canvas, annotations);
-      console.log(`Initialized renderer for category: ${category}`, renderer);
+      const renderer = new RendererClass( annotations); //Renderer intialization
+      // console.log(`Initialized renderer for category: ${category}`, renderer);
       this.renderers.push(renderer);
     }
   }
@@ -113,7 +113,7 @@ class VideoAnnotator {
 
     // pass render signal to the renderers
   _render() {
-    console.log("VideoAnnotator._render called");
+
     // 1. update the current time
     const currentTime = this.video.currentTime;
     if (this._lastRenderTime === currentTime) {
@@ -125,7 +125,7 @@ class VideoAnnotator {
 
     if (this.isVisible) {
         // 2. Clear the canvas
-        // this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         // // 3. Copy video frame to canvas if enabled
         // if (this.options.copy_video) {
@@ -134,17 +134,19 @@ class VideoAnnotator {
 
         // 4. Call render on each renderer
         const currentTimeMs = currentTime * 1000;
-        const videoRect = {
-            width: this.canvas.width,
-            height: this.canvas.height
-        };
+        const videoRect = this._getVideoRect();
         
-        console.log(`Calling render on ${this.renderers.length} renderers`);
         for(const renderer of this.renderers) {
-          renderer.render(currentTimeMs, videoRect);
+          renderer.render(this.ctx, currentTimeMs, videoRect);
         }
     }
 }
+_getVideoRect() {
+    return {
+      width: this.video.videoWidth,
+      height: this.video.videoHeight
+    };
+  }
 }
 
 export { VideoAnnotator };

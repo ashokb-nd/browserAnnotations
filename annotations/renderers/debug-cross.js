@@ -6,51 +6,45 @@ export class CrossRenderer extends BaseRenderer {
   getDefaultOptions() {
     return {
       StrokeColor: "#ff00ff", // Magenta
-      LineWidth: 2,
+      LineWidth: 5,
       Opacity: 0.8,
     };
   }
 
-  render(currentTimeMs, videoRect) {
+  render(ctx, currentTimeMs, videoRect) {
     console.log('debug-cross renderer called with:', { currentTimeMs, videoRect, annotationsCount: this.annotations.length });
 
     // Save context
-    this.ctx.save();
+    ctx.save();
 
     // Set styles
     const options = this.getDefaultOptions();
 
-    this.ctx.strokeStyle = options.StrokeColor;
-    this.ctx.lineWidth = options.LineWidth;
-    this.ctx.globalAlpha = options.Opacity;
+    ctx.strokeStyle = options.StrokeColor;
+    ctx.lineWidth = options.LineWidth;
+    ctx.globalAlpha = options.Opacity;
+
+
+    const L = videoRect.height;
+    const W = videoRect.width;
 
     // Draw cross from corner to corner
-    this.ctx.beginPath();
-    
-    // Diagonal line from top-left to bottom-right
-    this.ctx.moveTo(0, 0);
-    this.ctx.lineTo(videoRect.width, videoRect.height);
-    
-    // Diagonal line from top-right to bottom-left
-    this.ctx.moveTo(videoRect.width, 0);
-    this.ctx.lineTo(0, videoRect.height);
-    
-    this.ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(W, L);
+    ctx.moveTo(W, 0);
+    ctx.lineTo(0, L);
+    ctx.stroke();
 
-    // Draw center lines
-      this.ctx.beginPath();
-      
-      // Horizontal center line
-      this.ctx.moveTo(0, videoRect.height / 2);
-      this.ctx.lineTo(videoRect.width, videoRect.height / 2);
-      
-      // Vertical center line
-      this.ctx.moveTo(videoRect.width / 2, 0);
-      this.ctx.lineTo(videoRect.width / 2, videoRect.height);
-      
-      this.ctx.stroke();
+    // Draw center cross as plus
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 0);
+    ctx.lineTo(W / 2, L);
+    ctx.moveTo(0, L / 2);
+    ctx.lineTo(W, L / 2);
+    ctx.stroke();
 
     // Restore context
-    this.ctx.restore();
+    ctx.restore();
   }
 }
