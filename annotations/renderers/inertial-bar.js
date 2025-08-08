@@ -129,36 +129,74 @@ export class InertialBarRenderer extends BaseRenderer {
 
   _drawLabels(ctx, graphX, graphY, graphWidth, graphHeight, options) {
     // Helper function for drawing text with stroke for visibility
-    const drawStrokedText = (text, x, y) => {
+    const drawStrokedText = (text, x, y, fillColor = options.TextColor) => {
       // Draw stroke
       ctx.strokeStyle = options.TextStrokeColor;
       ctx.lineWidth = options.TextStrokeWidth;
       ctx.strokeText(text, x, y);
-      // Draw fill
-      ctx.fillStyle = options.TextColor;
+      // Draw fill with specified color
+      ctx.fillStyle = fillColor;
       ctx.fillText(text, x, y);
     };
 
     // Set font for all text
     ctx.font = options.TextFont;
+    
+    // Top-right corner: "BKWD|LEFT" with proper colors
+    ctx.textAlign = "right";
     ctx.textBaseline = "bottom";
     
-    // Top-left corner (above and to the left of box)
-    ctx.textAlign = "left";
-    drawStrokedText("Lateral", graphX, graphY - 5);
+    // Split the text for different colors
+    const topRightText = "BKWD|LEFT";
+    const bkwdWidth = ctx.measureText("BKWD").width;
+    const separatorWidth = ctx.measureText("|").width;
+    const leftWidth = ctx.measureText("LEFT").width;
+    const totalWidth = bkwdWidth + separatorWidth + leftWidth;
     
-    // Top-right corner (above and to the right of box)
+    const endX = graphX + graphWidth;
+    const topY = graphY - 5;
+    
+    // Draw "LEFT" in green (lateral color)
+    drawStrokedText("LEFT", endX, topY, options.Curve1Color);
+    
+    // Draw "|" separator in white
+    const leftX = endX - leftWidth;
+    drawStrokedText("|", leftX - separatorWidth, topY, options.TextColor);
+    
+    // Draw "BKWD" in red (driving color)
+    const separatorX = leftX - separatorWidth;
+    drawStrokedText("BKWD", separatorX, topY, options.Curve2Color);
+    
+    // Bottom-right corner: "FWD|RIGHT" with proper colors
     ctx.textAlign = "right";
-    drawStrokedText("Driving", graphX + graphWidth, graphY - 5);
+    ctx.textBaseline = "top";
     
-    // Bottom-left corner (below and to the left of box)
+    const bottomRightText = "FWD|RIGHT";
+    const fwdWidth = ctx.measureText("FWD").width;
+    const rightWidth = ctx.measureText("RIGHT").width;
+    
+    const bottomY = graphY + graphHeight + 5;
+    
+    // Draw "RIGHT" in green (lateral color)
+    drawStrokedText("RIGHT", endX, bottomY, options.Curve1Color);
+    
+    // Draw "|" separator in white
+    const rightX = endX - rightWidth;
+    drawStrokedText("|", rightX - separatorWidth, bottomY, options.TextColor);
+    
+    // Draw "FWD" in red (driving color)
+    const separatorX2 = rightX - separatorWidth;
+    drawStrokedText("FWD", separatorX2, bottomY, options.Curve2Color);
+    
+    // Top-left corner: Show +0.75G scale
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    drawStrokedText("+0.75G", graphX, graphY - 5, options.TextColor);
+    
+    // Bottom-left corner: Show -0.75G scale
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
-    drawStrokedText("Acceleration", graphX, graphY + graphHeight + 5);
-    
-    // Bottom-right corner (below and to the right of box)
-    ctx.textAlign = "right";
-    drawStrokedText("Real-time", graphX + graphWidth, graphY + graphHeight + 5);
+    drawStrokedText("-0.75G", graphX, graphY + graphHeight + 5, options.TextColor);
   }
 
   _drawTimeline(ctx, currentTimeMs, minEpochTime, maxEpochTime, graphX, graphY, graphWidth, graphHeight, options) {

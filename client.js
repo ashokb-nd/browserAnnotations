@@ -222,7 +222,7 @@ function setupVideoAnnotatorsWithManifest(annotation_manifest){
     const inward_annotator = new VideoAnnotator(inwardVideoElement,
         annotation_manifest,
         inwardCanvas,
-        [ "dsf", "inertial-bar", "header-banner", "outward-bounding-boxes"] // categories for renderers - matches extractor categories
+        [  "inertial-bar", "header-banner"] // categories for renderers - matches extractor categories
     );
 
     const outward_annotator = new VideoAnnotator(outwardVideoElement,

@@ -161,8 +161,7 @@ export class HeaderBanner extends BaseRenderer {
     const currentSpeed = 38; // Current speed in mph
     const speedLimit = 35; // Speed limit in mph
     const alertMessages = [
-      "Speed Camera Ahead",
-      "Construction Zone"
+      "over speeding",
     ];
 
     // Save context
