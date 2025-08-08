@@ -61,14 +61,14 @@ function dsf_extractor(video_metadata) {
   // Create lane calibration annotation using Annotation class
   const laneCalMessage = _getLaneCalMessage(video_metadata);
   if (laneCalMessage) {
-    const laneAnnotation = new Annotation({
-      id: '#dsf_001', // Unique ID for this annotation
-      category: 'dsf',
-      timeRange: { startMs: 0, endMs: 999999999 },
-      data: {
+    const laneAnnotation = new Annotation(
+      'dsf', // category
+      0, // startTimeMs
+      999999999, // durationMs 
+      {
         "vanishing_triangle": laneCalMessage
       }
-    });
+    );
     
     annotations.push(laneAnnotation);
   }

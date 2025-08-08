@@ -56,6 +56,11 @@ import { BaseRenderer } from "./base-renderer.js";
 class DSFRenderer extends BaseRenderer {
   static category = "dsf";
 
+  constructor(annotations) {
+    super(annotations);
+    this.options = this.getDefaultOptions();
+  }
+
   getDefaultOptions() {
     return {
       defaultStrokeColor: "#00FF00", // Green
@@ -67,7 +72,20 @@ class DSFRenderer extends BaseRenderer {
     };
   }
 
-  render(annotation, currentTimeMs, videoRect) {
+  render(ctx, currentTimeMs, videoRect) {
+    // Find active DSF annotations for current time
+    const activeAnnotations = this.annotations.filter(annotation => {
+      return currentTimeMs >= annotation.startTimeMs && 
+             currentTimeMs <= (annotation.startTimeMs + annotation.durationMs);
+    });
+
+    // Render each active annotation
+    activeAnnotations.forEach(annotation => {
+      this.renderAnnotation(ctx, annotation, currentTimeMs, videoRect);
+    });
+  }
+
+  renderAnnotation(ctx, annotation, currentTimeMs, videoRect) {
     const { data, style = {} } = annotation;
     
     // Check for required data
@@ -85,13 +103,13 @@ class DSFRenderer extends BaseRenderer {
     const showEndpoints = style.showEndpoints !== undefined ? style.showEndpoints : this.options.defaultShowEndpoints;
 
     // Save context
-    this.ctx.save();
+    ctx.save();
 
     // Set line styles
-    this.ctx.strokeStyle = strokeColor;
-    this.ctx.lineWidth = lineWidth;
-    this.ctx.lineCap = 'round';
-    this.ctx.globalAlpha = style.opacity || this.options.defaultOpacity;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = style.opacity || this.options.defaultOpacity;
 
     // Draw each lane line
     vanishingTriangle.forEach((linePoints, index) => {
@@ -108,37 +126,38 @@ class DSFRenderer extends BaseRenderer {
           const endY = endPoint[1] * videoRect.height;
 
           // Draw the lane line
-          this.ctx.beginPath();
-          this.ctx.moveTo(startX, startY);
-          this.ctx.lineTo(endX, endY);
-          this.ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
 
           // Draw endpoint markers if enabled
           if (showEndpoints) {
-            this.drawEndpoint(startX, startY);
-            this.drawEndpoint(endX, endY);
+            this.drawEndpoint(ctx, startX, startY);
+            this.drawEndpoint(ctx, endX, endY);
           }
         }
       }
     });
 
     // Restore context
-    this.ctx.restore();
+    ctx.restore();
   }
 
   /**
    * Draw endpoint marker
+   * @param {CanvasRenderingContext2D} ctx - Canvas context
    * @param {number} x - X coordinate
    * @param {number} y - Y coordinate
    */
-  drawEndpoint(x, y) {
-    this.ctx.save();
-    this.ctx.fillStyle = this.options.endpointColor;
-    this.ctx.globalAlpha = 1.0; // Full opacity for endpoints
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, this.options.endpointRadius, 0, 2 * Math.PI);
-    this.ctx.fill();
-    this.ctx.restore();
+  drawEndpoint(ctx, x, y) {
+    ctx.save();
+    ctx.fillStyle = this.options.endpointColor;
+    ctx.globalAlpha = 1.0; // Full opacity for endpoints
+    ctx.beginPath();
+    ctx.arc(x, y, this.options.endpointRadius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
   }
 }
 

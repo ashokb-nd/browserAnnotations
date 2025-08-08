@@ -222,13 +222,13 @@ function setupVideoAnnotatorsWithManifest(annotation_manifest){
     const inward_annotator = new VideoAnnotator(inwardVideoElement,
         annotation_manifest,
         inwardCanvas,
-        [ "inertial-bar", "header-banner"] // categories for renderers
+        [ "dsf", "inertial-bar", "header-banner"] // categories for renderers - matches extractor categories
     );
 
     const outward_annotator = new VideoAnnotator(outwardVideoElement,
         annotation_manifest,
         outwardCanvas,
-        [ "inertial-bar", "header-banner"] // categories for renderers
+        [ "dsf", "inertial-bar", "header-banner"] // categories for renderers - matches extractor categories
     );
 
     // Attach annotators to the video elements so they can be accessed later
@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
             getMetadata(id)
                 .then(metadata => {
                     const annotation_manifest = MetadataToAnnotationConverter.convertToManifest(metadata,['dsf','inertial-bar','header-banner']); // categories for extractor
-                    console.log('Annotations:', annotation_manifest);
+                    console.log('Annotation Manifest:', annotation_manifest);
                     
                     // Reinitialize video annotators with the actual annotation manifest
                     setupVideoAnnotatorsWithManifest(annotation_manifest);

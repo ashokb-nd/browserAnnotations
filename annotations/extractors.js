@@ -12,6 +12,8 @@
 
 import { AnnotationManifest, Annotation } from './annotation-manifest.js';
 import { dsf_extractor } from './extractors-folder/dsf-extractor.js';
+import { inertialBarExtractor } from './extractors-folder/inertial-bar-extractor.js';
+import { headerBannerExtractor } from './extractors-folder/header-banner-extractor.js';
 
 
 
@@ -26,12 +28,12 @@ import { dsf_extractor } from './extractors-folder/dsf-extractor.js';
 const Extractors = {
   hello(video_metadata, options) {
     return [
-      new Annotation({
-        id: 'hello-world',
-        category: 'hello',
-        timeRange: { startMs: 0, endMs: Infinity },
-        data: { message: 'Hello, world!' }
-      })
+      new Annotation(
+        'hello', // category
+        0, // startTimeMs
+        Infinity, // durationMs
+        { message: 'Hello, world!' } // data
+      )
     ];
   },
 
@@ -42,19 +44,16 @@ const Extractors = {
     // Placeholder logic - this would be replaced with actual metadata parsing
     if (video_metadata && video_metadata.detections) {
       video_metadata.detections.forEach((detection, index) => {
-        annotations.push(new Annotation({
-          id: `detection-${index}`,
-          category: 'detection',
-          timeRange: { 
-            startMs: detection.timestamp || 0, 
-            endMs: (detection.timestamp || 0) + 5000 
-          },
-          data: {
+        annotations.push(new Annotation(
+          'detection', // category
+          detection.timestamp || 0, // startTimeMs
+          5000, // durationMs
+          {
             bbox: detection.bbox || { x: 0.1, y: 0.1, width: 0.2, height: 0.3 },
             confidence: detection.confidence || 0.95,
             class: detection.class || 'vehicle'
           }
-        }));
+        ));
       });
     }
     
@@ -64,15 +63,15 @@ const Extractors = {
   // Cross extractor for debugging - creates debug crosses
   cross(video_metadata, options) {
     return [
-      new Annotation({
-        id: 'debug-cross',
-        category: 'cross',
-        timeRange: { startMs: 0, endMs: 30000 },
-        data: {
+      new Annotation(
+        'cross', // category
+        0, // startTimeMs
+        30000, // durationMs
+        {
           debugText: 'Debug Cross from Metadata',
           includeCenterLines: true
         }
-      })
+      )
     ];
   },
 
@@ -82,16 +81,16 @@ const Extractors = {
     
     // Example: create text annotation from metadata
     if (video_metadata) {
-      annotations.push(new Annotation({
-        id: 'metadata-text',
-        category: 'text',
-        timeRange: { startMs: 1000, endMs: 5000 },
-        data: {
+      annotations.push(new Annotation(
+        'text', // category
+        1000, // startTimeMs
+        4000, // durationMs (endMs - startMs = 5000 - 1000)
+        {
           text: `Alert ID: ${video_metadata.alertId || 'Unknown'}`,
           position: { x: 0.02, y: 0.02 },
           anchor: 'top-left'
         }
-      }));
+      ));
     }
     
     return annotations;
@@ -100,12 +99,17 @@ const Extractors = {
 
   // Add more extractor functions as needed
 
-  inertialBar(video_metadata, options) {
+  'inertial-bar' : (video_metadata, options) => {
+    return inertialBarExtractor(video_metadata, options);
   },
 
-  dsf(video_metadata, options) {
+  "dsf" : (video_metadata, options) => {
     return dsf_extractor(video_metadata);
   },
+  
+  'header-banner' : (video_metadata, options) => {
+    return headerBannerExtractor(video_metadata, options);
+  }
 
 };
 
