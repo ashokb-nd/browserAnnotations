@@ -13,9 +13,9 @@ import { BaseVisualizer } from "./base-visualizer.js";
  *   }
  * }
  */
-export class DSFVisualizer extends BaseVisualizer {
+export class DSF extends BaseVisualizer {
   constructor(metadata) {
-    super("dsf", metadata);
+    super(metadata);
   }
 
   // Extract DSF data from metadata using same logic as dsf-extractor

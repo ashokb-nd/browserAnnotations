@@ -11,9 +11,9 @@ import { BaseVisualizer } from "./base-visualizer.js";
  * - The detection data contains actual epoch timestamps (e.g., 1751942810996)
  * - We need to convert video time to epoch time using: currentEpochTime = videoStartTime + videoTimeMs
  */
-export class OutwardBoundingBoxesVisualizer extends BaseVisualizer {
+export class OutwardBoundingBoxes extends BaseVisualizer {
   constructor(metadata) {
-    super("outward-bounding-boxes", metadata);
+    super(metadata);
   }
 
   // Extract outward bounding boxes data from metadata

@@ -9,9 +9,9 @@ import { BaseVisualizer } from "./base-visualizer.js";
  * Expected data structure extracted from metadata:
  * - sensorMetaData array with accelerometer readings
  */
-export class InertialBarVisualizer extends BaseVisualizer {
+export class InertialBar extends BaseVisualizer {
   constructor(metadata) {
-    super("inertial-bar", metadata);
+    super(metadata);
   }
 
   // Extract inertial bar data from metadata using same logic as inertial-bar-extractor

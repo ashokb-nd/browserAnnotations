@@ -1,8 +1,8 @@
 import { BaseVisualizer } from "../vizualizers/base-visualizer.js";
 
-export class CrossVisualizer extends BaseVisualizer {
+export class Cross extends BaseVisualizer {
   constructor(metadata) {
-    super("debug-cross", metadata);
+    super(metadata);
   }
 
   // Extract data - for debug cross, we don't need specific data from metadata

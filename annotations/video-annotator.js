@@ -9,31 +9,19 @@ import { BaseVisualizer } from "./vizualizers/base-visualizer.js";
 
 
 // import visualizers
-import { CrossVisualizer } from "./vizualizers/debug-cross.js";
-import { DSFVisualizer } from "./vizualizers/dsf.js";
-import { HeaderBannerVisualizer } from "./vizualizers/header-banner.js";
-import { InertialBarVisualizer } from "./vizualizers/inertial-bar.js";
-import { OutwardBoundingBoxesVisualizer } from "./vizualizers/outward-bounding-boxes.js";
-// import { InertialBarRenderer } from "./renderers/inertial-bar.js";
-// import { DSFRenderer } from "./renderers/dsf-renderer.js";
-// import {HeaderBanner} from "./renderers/header.js";
-// import { OutwardBoundingBoxesRenderer } from "./renderers/outward-bounding-boxes-renderer.js";
-
-// import { DetectionRenderer } from "./renderers/detection-renderer.js";
-// import { TextRenderer } from "./renderers/text-renderer.js";
-// import { GraphRenderer } from "./renderers/graph-renderer.js";
-// import { TrajectoryRenderer } from "./renderers/trajectory-renderer.js";
-// import { HelloRenderer } from "./renderers/hello-renderer.js";
-// import { DSFRenderer } from "./renderers/dsf-renderer.js";
-
+import { Cross } from "./vizualizers/debug-cross.js";
+import { DSF } from "./vizualizers/dsf.js";
+import { HeaderBanner } from "./vizualizers/header-banner.js";
+import { InertialBar } from "./vizualizers/inertial-bar.js";
+import { OutwardBoundingBoxes } from "./vizualizers/outward-bounding-boxes.js";
 
 
 const VISUALIZER_MAP = {
-  "debug-cross": CrossVisualizer,
-  "dsf": DSFVisualizer,
-  "header-banner": HeaderBannerVisualizer,
-  "inertial-bar": InertialBarVisualizer,
-  "outward-bounding-boxes": OutwardBoundingBoxesVisualizer,
+  "Cross": Cross,
+  "DSF": DSF,
+  "HeaderBanner": HeaderBanner,
+  "InertialBar": InertialBar,
+  "OutwardBoundingBoxes": OutwardBoundingBoxes,
 };
 
 

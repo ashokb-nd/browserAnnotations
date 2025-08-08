@@ -12,7 +12,7 @@
  * 1. Extend BaseVisualizer:
  *    class MyVisualizer extends BaseVisualizer {
  *      constructor(metadata, options = {}) {
- *        super("my-visualizer", metadata); 
+ *        super(metadata); // NAME is automatically derived from class name
  *      }
  * 
  * 2. Extract your data from metadata:
@@ -38,8 +38,9 @@
  *   visualizer.setVisible(false); // Hide
  */
 export class BaseVisualizer {
-  constructor(NAME, metadata) {
-    this.NAME = NAME;
+  constructor(metadata) {
+    // Automatically derive NAME from class name
+    this.NAME = this.constructor.name;
     this._visible = true; // Always start visible, use setVisible() to control
 
     this.metadata = metadata;

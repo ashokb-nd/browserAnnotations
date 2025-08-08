@@ -6,9 +6,9 @@ import { BaseVisualizer } from "./base-visualizer.js";
  * Expected data structure extracted from metadata:
  * - Session info, device info, speed data, time data, alerts
  */
-export class HeaderBannerVisualizer extends BaseVisualizer {
+export class HeaderBanner extends BaseVisualizer {
   constructor(metadata) {
-    super("header-banner", metadata);
+    super(metadata);
   }
 
   // Extract header banner data from metadata using same logic as header-banner-extractor
