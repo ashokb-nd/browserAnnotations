@@ -2,12 +2,6 @@
 // and renders annotations on a canvas element.
 // It handles video time updates, resizing, and rendering annotations.
 
-
-
-import { BaseVisualizer } from "./vizualizers/base-visualizer.js";
-
-
-
 // import visualizers
 import { Cross } from "./vizualizers/debug-cross.js";
 import { DSF } from "./vizualizers/dsf.js";
@@ -27,8 +21,6 @@ const AVAILABLE_VISUALIZERS = [
 
 // Create map automatically: class name -> class reference
 const VISUALIZER_MAP = Object.fromEntries(AVAILABLE_VISUALIZERS.map(cls => [cls.name, cls]));
-
-
 
 class VideoAnnotator {
   constructor(videoElement,
@@ -135,14 +127,22 @@ class VideoAnnotator {
         // }
 
         // 4. Call display on each visualizer
-        const currentTimeMs = currentTime * 1000;
         const videoRect = this._getVideoRect();
-        
+        const epochTime = this._video_PTS_to_epochTime(currentTime);
+
         for(const visualizer of this.visualizers) {
-          visualizer.display(this.ctx, currentTimeMs, videoRect);
+          visualizer.display(this.ctx, epochTime, videoRect);
         }
     }
 }
+
+  // Convert video PTS to epoch time
+  _video_PTS_to_epochTime(videoPTS) {
+    // need to know the starting epoch time of the video (Read from metadata)
+    throw new Error("Method _video_PTS_to_epochTime not implemented in VideoAnnotator");
+    return;
+  }
+
 _getVideoRect() {
     return {
       width: this.video.videoWidth,
