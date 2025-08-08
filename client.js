@@ -4,6 +4,9 @@ import { VideoRecorder } from './video-recorder.js';
 
 // Function to draw annotations from VideoAnnotator onto a canvas
 function drawAnnotationsOnCanvas(annotator, ctx, canvas, currentTimeMs) {
+    // Clear the canvas before drawing
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     // Get video rectangle for coordinate transformation
     const videoRect = {
         width: canvas.width,
@@ -94,9 +97,6 @@ function setupAnnotationCanvas(videoId, canvasId) {
         canvas.style.height = video.offsetHeight + 'px';
 
         function drawAnnotations() {
-            // Clear only the annotation canvas (not the video canvas below)
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             // Draw annotations if annotator exists and is visible
             if (video.annotator && video.annotator.isVisible) {
                 drawAnnotationsOnCanvas(video.annotator, ctx, canvas, video.currentTime * 1000);
@@ -222,13 +222,13 @@ function setupVideoAnnotatorsWithManifest(annotation_manifest){
     const inward_annotator = new VideoAnnotator(inwardVideoElement,
         annotation_manifest,
         inwardCanvas,
-        [ "dsf", "inertial-bar", "header-banner"] // categories for renderers - matches extractor categories
+        [ "dsf", "inertial-bar", "header-banner", "outward-bounding-boxes"] // categories for renderers - matches extractor categories
     );
 
     const outward_annotator = new VideoAnnotator(outwardVideoElement,
         annotation_manifest,
         outwardCanvas,
-        [ "dsf", "inertial-bar", "header-banner"] // categories for renderers - matches extractor categories
+        [ "dsf", "inertial-bar", "header-banner", "outward-bounding-boxes"] // categories for renderers - matches extractor categories
     );
 
     // Attach annotators to the video elements so they can be accessed later
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (id) {
             getMetadata(id)
                 .then(metadata => {
-                    const annotation_manifest = MetadataToAnnotationConverter.convertToManifest(metadata,['dsf','inertial-bar','header-banner']); // categories for extractor
+                    const annotation_manifest = MetadataToAnnotationConverter.convertToManifest(metadata,['dsf','inertial-bar','header-banner','outward-bounding-boxes']); // categories for extractor
                     console.log('Annotation Manifest:', annotation_manifest);
                     
                     // Reinitialize video annotators with the actual annotation manifest

@@ -14,6 +14,7 @@ import { AnnotationManifest, Annotation } from './annotation-manifest.js';
 import { dsf_extractor } from './extractors-folder/dsf-extractor.js';
 import { inertialBarExtractor } from './extractors-folder/inertial-bar-extractor.js';
 import { headerBannerExtractor } from './extractors-folder/header-banner-extractor.js';
+import { outwardBoundingBoxesExtractor } from './extractors-folder/outward-bounding-boxes-extractor.js';
 
 
 
@@ -109,6 +110,10 @@ const Extractors = {
   
   'header-banner' : (video_metadata, options) => {
     return headerBannerExtractor(video_metadata, options);
+  },
+
+  'outward-bounding-boxes' : (video_metadata, options) => {
+    return outwardBoundingBoxesExtractor(video_metadata, options);
   }
 
 };

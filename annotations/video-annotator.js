@@ -14,6 +14,7 @@ import { CrossRenderer } from "./renderers/debug-cross.js";
 import { InertialBarRenderer } from "./renderers/inertial-bar.js";
 import { DSFRenderer } from "./renderers/dsf-renderer.js";
 import {HeaderBanner} from "./renderers/header.js";
+import { OutwardBoundingBoxesRenderer } from "./renderers/outward-bounding-boxes-renderer.js";
 
 // import { DetectionRenderer } from "./renderers/detection-renderer.js";
 // import { TextRenderer } from "./renderers/text-renderer.js";
@@ -29,6 +30,7 @@ const RENDER_MAP = {
   "inertial-bar": InertialBarRenderer,
   "dsf": DSFRenderer,
   "header-banner": HeaderBanner,
+  "outward-bounding-boxes": OutwardBoundingBoxesRenderer,
 };
 
 
