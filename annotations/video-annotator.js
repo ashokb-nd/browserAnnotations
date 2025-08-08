@@ -12,6 +12,7 @@ import { BaseVisualizer } from "./vizualizers/base-visualizer.js";
 import { CrossVisualizer } from "./vizualizers/debug-cross.js";
 import { DSFVisualizer } from "./vizualizers/dsf.js";
 import { HeaderBannerVisualizer } from "./vizualizers/header-banner.js";
+import { InertialBarVisualizer } from "./vizualizers/inertial-bar.js";
 // import { InertialBarRenderer } from "./renderers/inertial-bar.js";
 // import { DSFRenderer } from "./renderers/dsf-renderer.js";
 // import {HeaderBanner} from "./renderers/header.js";
@@ -30,7 +31,7 @@ const VISUALIZER_MAP = {
   "debug-cross": CrossVisualizer,
   "dsf": DSFVisualizer,
   "header-banner": HeaderBannerVisualizer,
-  // "inertial-bar": InertialBarRenderer,
+  "inertial-bar": InertialBarVisualizer,
   // "outward-bounding-boxes": OutwardBoundingBoxesRenderer,
 };
 
