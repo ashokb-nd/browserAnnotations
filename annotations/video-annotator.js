@@ -39,6 +39,13 @@ class VideoAnnotator {
     this.metadata = metadata;
     this.visualizerCategories = visualizerCategories;
 
+    // Cache startTime from metadata for performance
+    this.startTime = this.metadata.startTime || null;
+    if (this.startTime === null) {
+      throw new Error("startTime not found in metadata");
+    }
+    console.log('Cached startTime:', this.startTime);
+
     // Default options with overrides
     this.options = {
       debugMode: false,
@@ -138,9 +145,8 @@ class VideoAnnotator {
 
   // Convert video PTS to epoch time
   _video_PTS_to_epochTime(videoPTS) {
-    // need to know the starting epoch time of the video (Read from metadata)
-    throw new Error("Method _video_PTS_to_epochTime not implemented in VideoAnnotator");
-    return;
+    // Use cached startTime for performance
+    return this.startTime + (videoPTS * 1000); // Convert seconds to milliseconds
   }
 
 _getVideoRect() {
