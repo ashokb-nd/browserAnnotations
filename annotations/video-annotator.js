@@ -16,13 +16,18 @@ import { InertialBar } from "./vizualizers/inertial-bar.js";
 import { OutwardBoundingBoxes } from "./vizualizers/outward-bounding-boxes.js";
 
 
-const VISUALIZER_MAP = {
-  "Cross": Cross,
-  "DSF": DSF,
-  "HeaderBanner": HeaderBanner,
-  "InertialBar": InertialBar,
-  "OutwardBoundingBoxes": OutwardBoundingBoxes,
-};
+// Auto-generate visualizer map from classes
+const AVAILABLE_VISUALIZERS = [
+  Cross,
+  DSF, 
+  HeaderBanner,
+  InertialBar,
+  OutwardBoundingBoxes,
+];
+
+// Create map automatically: class name -> class reference
+const VISUALIZER_MAP = Object.fromEntries(AVAILABLE_VISUALIZERS.map(cls => [cls.name, cls]));
+
 
 
 class VideoAnnotator {
@@ -67,6 +72,7 @@ class VideoAnnotator {
       const VisualizerClass = VISUALIZER_MAP[category];
       if (!VisualizerClass) {
         console.warn(`Visualizer for category "${category}" not found.`);
+        console.log('Available visualizers:', Object.keys(VISUALIZER_MAP));
         continue;
       }
 
