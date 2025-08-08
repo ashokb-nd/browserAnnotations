@@ -88,13 +88,19 @@ export class InertialBarRenderer extends BaseRenderer {
   _drawCurves(ctx, timeValues, accelValues, gyroValues, graphX, graphY, graphWidth, graphHeight, options) {
     const numPoints = timeValues.length;
     
-    // First curve - Accelerometer data (green)
+    // Scale factor: graph height represents -0.75G to +0.75G range
+    const maxG = 0.75;
+    const gScale = (graphHeight / (2 * maxG)) * 0.6; // Reduced from full scale to 60% for less vertical movement
+    
+    // First curve - Lateral acceleration (green)
     ctx.strokeStyle = options.Curve1Color;
     ctx.lineWidth = options.CurveLineWidth;
     ctx.beginPath();
     for (let i = 0; i < numPoints; i++) {
-      const x = graphX + timeValues[i] * graphWidth; // Use actual time values
-      const y = graphY + graphHeight/2 + accelValues[i] * (graphHeight * 0.15); // Use actual accel values
+      const x = graphX + timeValues[i] * graphWidth;
+      // Scale accel values: center + (value * scale), clamped to ±0.75G
+      const clampedAccel = Math.max(-maxG, Math.min(maxG, accelValues[i]));
+      const y = graphY + graphHeight/2 - (clampedAccel * gScale); // Negative because canvas Y increases downward
       if (i === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -103,13 +109,15 @@ export class InertialBarRenderer extends BaseRenderer {
     }
     ctx.stroke();
 
-    // Second curve - Gyroscope data (red)
+    // Second curve - Driving acceleration (red)
     ctx.strokeStyle = options.Curve2Color;
     ctx.lineWidth = options.CurveLineWidth;
     ctx.beginPath();
     for (let i = 0; i < numPoints; i++) {
-      const x = graphX + timeValues[i] * graphWidth; // Use actual time values
-      const y = graphY + graphHeight/2 + gyroValues[i] * (graphHeight * 0.15); // Use actual gyro values
+      const x = graphX + timeValues[i] * graphWidth;
+      // Scale gyro values: center + (value * scale), clamped to ±0.75G
+      const clampedGyro = Math.max(-maxG, Math.min(maxG, gyroValues[i]));
+      const y = graphY + graphHeight/2 - (clampedGyro * gScale); // Negative because canvas Y increases downward
       if (i === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -137,30 +145,34 @@ export class InertialBarRenderer extends BaseRenderer {
     
     // Top-left corner (above and to the left of box)
     ctx.textAlign = "left";
-    drawStrokedText("Accel X", graphX, graphY - 5);
+    drawStrokedText("Lateral", graphX, graphY - 5);
     
     // Top-right corner (above and to the right of box)
     ctx.textAlign = "right";
-    drawStrokedText("Gyro Y", graphX + graphWidth, graphY - 5);
+    drawStrokedText("Driving", graphX + graphWidth, graphY - 5);
     
     // Bottom-left corner (below and to the left of box)
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
-    drawStrokedText("IMU Data", graphX, graphY + graphHeight + 5);
+    drawStrokedText("Acceleration", graphX, graphY + graphHeight + 5);
     
     // Bottom-right corner (below and to the right of box)
     ctx.textAlign = "right";
     drawStrokedText("Real-time", graphX + graphWidth, graphY + graphHeight + 5);
   }
 
-  _drawTimeline(ctx, currentTimeMs, graphX, graphY, graphWidth, graphHeight, options) {
-    // Draw timeline representing current timestamp
-    // Assuming the graph represents a time window (e.g., last 10 seconds)
-    const timeWindowMs = 10000; // 10 seconds time window
-    const currentTimeInWindow = (currentTimeMs % timeWindowMs) / timeWindowMs; // Normalize to 0-1
-    const timeLineX = graphX + currentTimeInWindow * graphWidth;
+  _drawTimeline(ctx, currentTimeMs, minEpochTime, maxEpochTime, graphX, graphY, graphWidth, graphHeight, options) {
+    // Convert current video time (milliseconds) to epoch time equivalent
+    // Assuming video starts at minEpochTime
+    const currentEpochTime = minEpochTime + currentTimeMs;
     
-    ctx.strokeStyle = options.TimelineColor; // Use professional amber color
+    // Calculate position within the epoch time range
+    const epochTimeRange = maxEpochTime - minEpochTime;
+    const timelineProgress = Math.max(0, Math.min(1, (currentEpochTime - minEpochTime) / epochTimeRange));
+    
+    const timeLineX = graphX + timelineProgress * graphWidth;
+    
+    ctx.strokeStyle = options.TimelineColor;
     ctx.lineWidth = options.TimelineWidth;
     ctx.beginPath();
     ctx.moveTo(timeLineX, graphY);
@@ -169,7 +181,13 @@ export class InertialBarRenderer extends BaseRenderer {
   }
 
   render(ctx, currentTimeMs, videoRect) {
-    // console.log('inertial-bar renderer called with:', { currentTimeMs, videoRect, annotationsCount: this.annotations.length });
+    // Find active inertial-bar annotations for current time
+    const activeAnnotations = this.annotations.filter(annotation => {
+      return currentTimeMs >= annotation.startTimeMs && 
+             currentTimeMs <= (annotation.startTimeMs + annotation.durationMs);
+    });
+
+    if (activeAnnotations.length === 0) return;
 
     // Save context
     ctx.save();
@@ -182,7 +200,7 @@ export class InertialBarRenderer extends BaseRenderer {
     // Graph dimensions and position - more compact and modern
     const padding = 20;
     const graphWidth = videoRect.width * 0.9; // Slightly smaller for better margins
-    const graphHeight = videoRect.height * 0.12; // Slightly more compact
+    const graphHeight = videoRect.height * 0.08; // Reduced from 0.12 to 0.08 (smaller vertical size)
     const graphX = (videoRect.width - graphWidth) / 2; // Center horizontally
     const graphY = videoRect.height - graphHeight - padding; // Clean bottom margin
 
@@ -192,18 +210,42 @@ export class InertialBarRenderer extends BaseRenderer {
     // Draw grid lines
     this._drawGridLines(ctx, graphX, graphY, graphWidth, graphHeight, options);
 
-    // Generate dummy IMU data (replace with actual data)
-    const numPoints = 100;
-    const { timeValues, accelValues, gyroValues } = this._generateDummyData(numPoints);
+    // Use actual IMU data from annotations
+    const annotation = activeAnnotations[0]; // Use first active annotation
+    const { acc1, acc2, acc3, epochtime } = annotation.data;
     
-    // Draw IMU data curves
-    this._drawCurves(ctx, timeValues, accelValues, gyroValues, graphX, graphY, graphWidth, graphHeight, options);
+    if (acc2 && acc3 && epochtime) {
+      // Convert epoch times to normalized values (0 to 1)
+      const minTime = Math.min(...epochtime);
+      const maxTime = Math.max(...epochtime);
+      const timeRange = maxTime - minTime;
+      
+      const timeValues = epochtime.map(time => (time - minTime) / timeRange);
+      
+      // Use acc2 (lateral) and acc3 (driving), ignore acc1 (gravity)
+      const lateralValues = acc2;  // Lateral acceleration
+      const drivingValues = acc3;  // Driving acceleration
+      
+      // Draw IMU data curves
+      this._drawCurves(ctx, timeValues, lateralValues, drivingValues, graphX, graphY, graphWidth, graphHeight, options);
+      
+      // Draw labels
+      this._drawLabels(ctx, graphX, graphY, graphWidth, graphHeight, options);
 
-    // Draw labels
-    this._drawLabels(ctx, graphX, graphY, graphWidth, graphHeight, options);
+      // Draw timeline indicator with proper epoch time mapping
+      this._drawTimeline(ctx, currentTimeMs, minTime, maxTime, graphX, graphY, graphWidth, graphHeight, options);
+    } else {
+      // Fallback to dummy data if real data not available
+      const numPoints = 100;
+      const { timeValues, accelValues, gyroValues } = this._generateDummyData(numPoints);
+      this._drawCurves(ctx, timeValues, accelValues, gyroValues, graphX, graphY, graphWidth, graphHeight, options);
+      
+      // Draw labels
+      this._drawLabels(ctx, graphX, graphY, graphWidth, graphHeight, options);
 
-    // Draw timeline indicator
-    this._drawTimeline(ctx, currentTimeMs, graphX, graphY, graphWidth, graphHeight, options);
+      // Draw timeline indicator (fallback)
+      this._drawTimeline(ctx, currentTimeMs, 0, 10000, graphX, graphY, graphWidth, graphHeight, options);
+    }
 
     // Restore context
     ctx.restore();
