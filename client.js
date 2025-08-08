@@ -1,44 +1,45 @@
 import { MetadataToAnnotationConverter } from './annotations/metadata-to-annotation-converter.js';
 import { VideoAnnotator } from './annotations/video-annotator.js';
+import { VideoRecorder } from './video-recorder.js';
 
-// // Function to draw annotations from VideoAnnotator onto a canvas
-// function drawAnnotationsOnCanvas(annotator, ctx, canvas, currentTimeMs) {
-//     // Get video rectangle for coordinate transformation
-//     const videoRect = {
-//         width: canvas.width,
-//         height: canvas.height
-//     };
+// Function to draw annotations from VideoAnnotator onto a canvas
+function drawAnnotationsOnCanvas(annotator, ctx, canvas, currentTimeMs) {
+    // Get video rectangle for coordinate transformation
+    const videoRect = {
+        width: canvas.width,
+        height: canvas.height
+    };
     
-//     // Iterate through all renderers (now an array, not a Map)
-//     for (const renderer of annotator.renderers) {
-//         try {
-//             // Save canvas state
-//             ctx.save();
+    // Iterate through all renderers (now an array, not a Map)
+    for (const renderer of annotator.renderers) {
+        try {
+            // Save canvas state
+            ctx.save();
             
-//             // Create a temporary renderer context that uses our canvas
-//             const originalCanvas = renderer.canvas;
-//             const originalCtx = renderer.ctx;
+            // Create a temporary renderer context that uses our canvas
+            const originalCanvas = renderer.canvas;
+            const originalCtx = renderer.ctx;
             
-//             // Temporarily assign our canvas and context
-//             renderer.canvas = canvas;
-//             renderer.ctx = ctx;
+            // Temporarily assign our canvas and context
+            renderer.canvas = canvas;
+            renderer.ctx = ctx;
             
-//             // Call the renderer's render method with the new signature
-//             renderer.render(currentTimeMs, videoRect);
+            // Call the renderer's render method with the new signature
+            renderer.render(ctx, currentTimeMs, videoRect);
             
-//             // Restore original canvas and context
-//             renderer.canvas = originalCanvas;
-//             renderer.ctx = originalCtx;
+            // Restore original canvas and context
+            renderer.canvas = originalCanvas;
+            renderer.ctx = originalCtx;
             
-//             // Restore canvas state
-//             ctx.restore();
-//         } catch (error) {
-//             console.error(`Error rendering with renderer:`, error);
-//         }
-//     }
-// }
+            // Restore canvas state
+            ctx.restore();
+        } catch (error) {
+            console.error(`Error rendering with renderer:`, error);
+        }
+    }
+}
 
-// Function to set up video frame canvas (separate from annotations)
+// Function to set up video frame canvas (bottom layer - no clearing)
 function setupVideoFrameCanvas(videoId, videoCanvasId) {
     const video = document.getElementById(videoId);
     const videoCanvas = document.getElementById(videoCanvasId);
@@ -53,12 +54,9 @@ function setupVideoFrameCanvas(videoId, videoCanvasId) {
         videoCanvas.style.width = video.offsetWidth + 'px';
         videoCanvas.style.height = video.offsetHeight + 'px';
 
-        // ====== function to draw video frames onto the video canvas ======
+        // Function to draw video frames onto the video canvas
         function drawVideoFrame(now, metadata) {
-            // Clear the video canvas
-            videoCtx.clearRect(0, 0, videoCanvas.width, videoCanvas.height);
-            
-            // Draw the current video frame to the video canvas
+            // Draw the current video frame to the video canvas (no clearing needed)
             videoCtx.drawImage(video, 0, 0, videoCanvas.width, videoCanvas.height);
             
             video.requestVideoFrameCallback(drawVideoFrame); // Request the next frame
@@ -80,8 +78,8 @@ function setupVideoFrameCanvas(videoId, videoCanvasId) {
     });
 }
 
-// Function to set up annotation canvas (no video frame drawing)
-function setupVideoCanvas(videoId, canvasId) {
+// Function to set up annotation canvas (top layer - transparent background)
+function setupAnnotationCanvas(videoId, canvasId) {
     const video = document.getElementById(videoId);
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext("2d");
@@ -94,6 +92,24 @@ function setupVideoCanvas(videoId, canvasId) {
         // Set canvas display size to match video display size
         canvas.style.width = video.offsetWidth + 'px';
         canvas.style.height = video.offsetHeight + 'px';
+
+        function drawAnnotations() {
+            // Clear only the annotation canvas (not the video canvas below)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw annotations if annotator exists and is visible
+            if (video.annotator && video.annotator.isVisible) {
+                drawAnnotationsOnCanvas(video.annotator, ctx, canvas, video.currentTime * 1000);
+            }
+            
+            // Continue animation loop
+            requestAnimationFrame(drawAnnotations);
+        }
+
+        // Start annotation rendering loop
+        video.addEventListener("play", () => {
+            drawAnnotations();
+        });
 
         // Update canvas display size when window resizes
         window.addEventListener("resize", () => {
@@ -127,8 +143,6 @@ async function getMetadata(id) {
 function loadVideos(id) {
     const inwardVideo = document.getElementById('inward-video');
     const outwardVideo = document.getElementById('outward-video');
-    const inwardDownload = document.getElementById('inward-download');
-    const outwardDownload = document.getElementById('outward-download');
     
     const inwardSrc = `/video/${id}/inward.mp4`;
     const outwardSrc = `/video/${id}/outward.mp4`;
@@ -136,10 +150,6 @@ function loadVideos(id) {
     // Update video sources
     inwardVideo.src = inwardSrc;
     outwardVideo.src = outwardSrc;
-    
-    // Update download links
-    inwardDownload.href = inwardSrc;
-    outwardDownload.href = outwardSrc;
     
     // Load the videos
     inwardVideo.load();
@@ -221,6 +231,15 @@ function setupVideoAnnotatorsWithManifest(annotation_manifest){
         [ "inertial-bar", "header-banner"] // categories for renderers
     );
 
+    // Attach annotators to the video elements so they can be accessed later
+    inwardVideoElement.annotator = inward_annotator;
+    outwardVideoElement.annotator = outward_annotator;
+
+    // Set visibility flag to enable rendering
+    inward_annotator.isVisible = true;
+    outward_annotator.isVisible = true;
+
+    console.log('Video annotators initialized with manifest and set to visible');
 }
 
 
@@ -269,10 +288,167 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// Set up canvas drawing for both videos (annotations only)
-setupVideoCanvas("inward-video", "inward-canvas");
-setupVideoCanvas("outward-video", "outward-canvas");
-
-// Set up video frame drawing for both videos (video frames only)
+// Set up video frame canvases (bottom layer)
 setupVideoFrameCanvas("inward-video", "inward-video-canvas");
 setupVideoFrameCanvas("outward-video", "outward-video-canvas");
+
+// Set up annotation canvases (top layer)
+setupAnnotationCanvas("inward-video", "inward-canvas");
+setupAnnotationCanvas("outward-video", "outward-canvas");
+
+/**
+ * Set up video recording functionality
+ */
+function setupVideoRecording() {
+    // Check if recording is supported
+    if (!VideoRecorder.isSupported()) {
+        console.warn('Video recording not supported in this browser');
+        // Disable download buttons
+        document.getElementById('inward-download-annotated').disabled = true;
+        document.getElementById('outward-download-annotated').disabled = true;
+        document.getElementById('inward-download-annotated').textContent = 'Recording Not Supported';
+        document.getElementById('outward-download-annotated').textContent = 'Recording Not Supported';
+        return;
+    }
+
+    console.log('Supported recording formats:', VideoRecorder.getSupportedMimeTypes());
+
+    // Set up inward video recording
+    setupVideoRecordingForCanvas('inward');
+    
+    // Set up outward video recording  
+    setupVideoRecordingForCanvas('outward');
+}
+
+/**
+ * Create a composite canvas that combines video frames and annotations for recording
+ */
+function createCompositeCanvas(videoPrefix) {
+    const videoCanvas = document.getElementById(`${videoPrefix}-video-canvas`);
+    const annotationCanvas = document.getElementById(`${videoPrefix}-canvas`);
+    
+    // Create offscreen canvas for composition
+    const compositeCanvas = document.createElement('canvas');
+    const compositeCtx = compositeCanvas.getContext('2d');
+    
+    // Set same dimensions as source canvases
+    compositeCanvas.width = videoCanvas.width;
+    compositeCanvas.height = videoCanvas.height;
+    
+    // Function to update composite canvas
+    function updateComposite() {
+        // Clear composite canvas
+        compositeCtx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+        
+        // Draw video frame (bottom layer)
+        compositeCtx.drawImage(videoCanvas, 0, 0);
+        
+        // Draw annotations (top layer)
+        compositeCtx.drawImage(annotationCanvas, 0, 0);
+        
+        // Continue updating during playback
+        requestAnimationFrame(updateComposite);
+    }
+    
+    // Start composition loop
+    updateComposite();
+    
+    return compositeCanvas;
+}
+
+/**
+ * Set up recording for a specific video/canvas pair
+ */
+function setupVideoRecordingForCanvas(videoPrefix) {
+    const videoElement = document.getElementById(`${videoPrefix}-video`);
+    const downloadButton = document.getElementById(`${videoPrefix}-download-annotated`);
+    const statusElement = document.getElementById(`${videoPrefix}-recording-status`);
+    
+    let recorder = null;
+    let compositeCanvas = null;
+
+    downloadButton.addEventListener('click', async () => {
+        try {
+            // Disable button during recording
+            downloadButton.disabled = true;
+            downloadButton.textContent = 'Preparing...';
+            statusElement.style.display = 'block';
+            statusElement.textContent = 'Preparing recording...';
+
+            // Create composite canvas for recording
+            compositeCanvas = createCompositeCanvas(videoPrefix);
+
+            // Create recorder with composite canvas
+            recorder = new VideoRecorder(videoElement, compositeCanvas, {
+                videoBitsPerSecond: 8000000, // 8 Mbps for high quality
+                frameRate: 30,
+                onRecordingStart: () => {
+                    console.log(`Started recording ${videoPrefix} video`);
+                    statusElement.textContent = 'Recording in progress...';
+                    downloadButton.textContent = 'Recording...';
+                },
+                onRecordingStop: (blob) => {
+                    console.log(`Stopped recording ${videoPrefix} video`, blob);
+                    statusElement.style.display = 'none';
+                    downloadButton.disabled = false;
+                    downloadButton.textContent = 'Download Annotated Video';
+                },
+                onRecordingProgress: (chunkSize, chunkCount) => {
+                    const totalSize = (recorder.getStatus().totalSize / 1024 / 1024).toFixed(1);
+                    statusElement.textContent = `Recording... ${totalSize}MB (${chunkCount} chunks)`;
+                },
+                onRecordingError: (error) => {
+                    console.error(`Recording error for ${videoPrefix}:`, error);
+                    statusElement.style.display = 'none';
+                    statusElement.textContent = `Error: ${error.message}`;
+                    statusElement.style.backgroundColor = '#dc3545';
+                    statusElement.style.display = 'block';
+                    downloadButton.disabled = false;
+                    downloadButton.textContent = 'Download Annotated Video';
+                    
+                    // Hide error after 5 seconds
+                    setTimeout(() => {
+                        statusElement.style.display = 'none';
+                    }, 5000);
+                }
+            });
+
+            // Check if video is ready
+            if (!videoElement.duration || isNaN(videoElement.duration)) {
+                throw new Error('Video not ready. Please wait for video to load completely.');
+            }
+
+            // Record the full video with annotations
+            await recorder.recordFullVideo();
+            
+        } catch (error) {
+            console.error(`Error setting up recording for ${videoPrefix}:`, error);
+            
+            statusElement.textContent = `Error: ${error.message}`;
+            statusElement.style.backgroundColor = '#dc3545';
+            statusElement.style.display = 'block';
+            
+            downloadButton.disabled = false;
+            downloadButton.textContent = 'Download Annotated Video';
+            
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
+        }
+    });
+
+    // Add cancel recording capability (ESC key)
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && recorder && recorder.isRecording) {
+            recorder.cancelRecording();
+            statusElement.style.display = 'none';
+            downloadButton.disabled = false;
+            downloadButton.textContent = 'Download Annotated Video';
+            console.log(`Cancelled ${videoPrefix} recording`);
+        }
+    });
+}
+
+// Initialize video recording functionality
+setupVideoRecording();
