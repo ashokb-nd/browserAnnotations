@@ -216,7 +216,7 @@ function setupVideoAnnotatorsWithMetadata(metadata){
     const outward_annotator = new VideoAnnotator(outwardVideoElement,
         metadata,
         outwardCanvas,
-        ["debug-cross", "dsf", "header-banner", "inertial-bar"] // All available visualizers
+        ["debug-cross", "dsf", "header-banner", "inertial-bar", "outward-bounding-boxes"] // All available visualizers
     );
 
     // Attach annotators to the video elements so they can be accessed later
