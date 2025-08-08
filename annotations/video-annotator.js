@@ -4,17 +4,16 @@
 
 
 
-import { AnnotationManifest, Annotation } from "./annotation-manifest.js";
-import { BaseRenderer } from "./renderers/base-renderer.js";
+import { BaseVisualizer } from "./vizualizers/base-visualizer.js";
 
 
 
-// import renderers
-import { CrossRenderer } from "./renderers/debug-cross.js";
-import { InertialBarRenderer } from "./renderers/inertial-bar.js";
-import { DSFRenderer } from "./renderers/dsf-renderer.js";
-import {HeaderBanner} from "./renderers/header.js";
-import { OutwardBoundingBoxesRenderer } from "./renderers/outward-bounding-boxes-renderer.js";
+// import visualizers
+import { CrossVisualizer } from "./vizualizers/debug-cross.js";
+// import { InertialBarRenderer } from "./renderers/inertial-bar.js";
+// import { DSFRenderer } from "./renderers/dsf-renderer.js";
+// import {HeaderBanner} from "./renderers/header.js";
+// import { OutwardBoundingBoxesRenderer } from "./renderers/outward-bounding-boxes-renderer.js";
 
 // import { DetectionRenderer } from "./renderers/detection-renderer.js";
 // import { TextRenderer } from "./renderers/text-renderer.js";
@@ -25,20 +24,20 @@ import { OutwardBoundingBoxesRenderer } from "./renderers/outward-bounding-boxes
 
 
 
-const RENDER_MAP = {
-  "debug-cross": CrossRenderer,
-  "inertial-bar": InertialBarRenderer,
-  "dsf": DSFRenderer,
-  "header-banner": HeaderBanner,
-  "outward-bounding-boxes": OutwardBoundingBoxesRenderer,
+const VISUALIZER_MAP = {
+  "debug-cross": CrossVisualizer,
+  // "inertial-bar": InertialBarRenderer,
+  // "dsf": DSFRenderer,
+  // "header-banner": HeaderBanner,
+  // "outward-bounding-boxes": OutwardBoundingBoxesRenderer,
 };
 
 
 class VideoAnnotator {
   constructor(videoElement,
-            annotationManifest, // json
+            metadata, // metadata object
             canvas,
-            rendererCategories = [],
+            visualizerCategories = [],
             options = {}) {
 
     this.video = videoElement;
@@ -48,8 +47,8 @@ class VideoAnnotator {
       throw new Error("Canvas context could not be initialized.");
     }
     
-    this.annotationManifest = annotationManifest;
-    this.rendererCategories = rendererCategories;
+    this.metadata = metadata;
+    this.visualizerCategories = visualizerCategories;
 
     // Default options with overrides
     this.options = {
@@ -62,29 +61,27 @@ class VideoAnnotator {
     this._lastRenderTime = -1;
 
     // State management
-    this.renderers = [];
-    this._initializeRenderers(this.rendererCategories);
+    this.visualizers = [];
+    this._initializeVisualizers(this.visualizerCategories);
 
     this._setupEventListeners();
   }
 
-    //intialize the renderers and 
-    // share the corresponding annotations with them.
-  _initializeRenderers(rendererCategories) {
-    console.log(rendererCategories);
-    for (const category of rendererCategories) {
-      const RendererClass = RENDER_MAP[category];
-      if (!RendererClass) {
-        console.warn(`Renderer for category "${category}" not found.`);
+    //initialize the visualizers and 
+    // share the corresponding metadata with them.
+  _initializeVisualizers(visualizerCategories) {
+    console.log(visualizerCategories);
+    for (const category of visualizerCategories) {
+      const VisualizerClass = VISUALIZER_MAP[category];
+      if (!VisualizerClass) {
+        console.warn(`Visualizer for category "${category}" not found.`);
         continue;
       }
 
-      // get the annotations list for this category
-      const annotations = this.annotationManifest.items[category] || [];
-
-      const renderer = new RendererClass( annotations); //Renderer intialization
-      console.log(`Initialized renderer for category: ${category}`, renderer);
-      this.renderers.push(renderer);
+      // pass the metadata directly to each visualizer
+      const visualizer = new VisualizerClass(this.metadata); //Visualizer initialization
+      console.log(`Initialized visualizer for category: ${category}`, visualizer);
+      this.visualizers.push(visualizer);
     }
   }
 
@@ -128,7 +125,7 @@ class VideoAnnotator {
     }
     this._lastRenderTime = currentTime;
 
-    // console.log(`VideoAnnotator._render called - isVisible: ${this.isVisible}, renderers count: ${this.renderers.length}`);
+    // console.log(`VideoAnnotator._render called - isVisible: ${this.isVisible}, visualizers count: ${this.visualizers.length}`);
 
     if (this.isVisible) {
         // 2. Clear the canvas
@@ -139,12 +136,12 @@ class VideoAnnotator {
         //     this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
         // }
 
-        // 4. Call render on each renderer
+        // 4. Call display on each visualizer
         const currentTimeMs = currentTime * 1000;
         const videoRect = this._getVideoRect();
         
-        for(const renderer of this.renderers) {
-          renderer.render(this.ctx, currentTimeMs, videoRect);
+        for(const visualizer of this.visualizers) {
+          visualizer.display(this.ctx, currentTimeMs, videoRect);
         }
     }
 }

@@ -1,4 +1,4 @@
-import { MetadataToAnnotationConverter } from './annotations/metadata-to-annotation-converter.js';
+// import { MetadataToAnnotationConverter } from './annotations/metadata-to-annotation-converter.js';
 import { VideoAnnotator } from './annotations/video-annotator.js';
 import { VideoRecorder } from './video-recorder.js';
 
@@ -13,31 +13,19 @@ function drawAnnotationsOnCanvas(annotator, ctx, canvas, currentTimeMs) {
         height: canvas.height
     };
     
-    // Iterate through all renderers (now an array, not a Map)
-    for (const renderer of annotator.renderers) {
+    // Iterate through all visualizers
+    for (const visualizer of annotator.visualizers) {
         try {
             // Save canvas state
             ctx.save();
             
-            // Create a temporary renderer context that uses our canvas
-            const originalCanvas = renderer.canvas;
-            const originalCtx = renderer.ctx;
-            
-            // Temporarily assign our canvas and context
-            renderer.canvas = canvas;
-            renderer.ctx = ctx;
-            
-            // Call the renderer's render method with the new signature
-            renderer.render(ctx, currentTimeMs, videoRect);
-            
-            // Restore original canvas and context
-            renderer.canvas = originalCanvas;
-            renderer.ctx = originalCtx;
+            // Call the visualizer's display method
+            visualizer.display(ctx, currentTimeMs, videoRect);
             
             // Restore canvas state
             ctx.restore();
         } catch (error) {
-            console.error(`Error rendering with renderer:`, error);
+            console.error(`Error rendering with visualizer:`, error);
         }
     }
 }
@@ -211,24 +199,24 @@ function loadVideos(id) {
 //     console.log('Video annotators initialized with empty manifest');
 // }
 
-function setupVideoAnnotatorsWithManifest(annotation_manifest){
+function setupVideoAnnotatorsWithMetadata(metadata){
     const inwardVideoElement = document.getElementById("inward-video");
     const outwardVideoElement = document.getElementById("outward-video");
 
     const inwardCanvas = document.getElementById("inward-canvas");
     const outwardCanvas = document.getElementById("outward-canvas");
 
-    // Create new annotators with the actual annotation manifest
+    // Create new annotators with metadata directly
     const inward_annotator = new VideoAnnotator(inwardVideoElement,
-        annotation_manifest,
+        metadata,
         inwardCanvas,
-        [  "inertial-bar", "header-banner"] // categories for renderers - matches extractor categories
+        ["debug-cross"] // Start with debug cross visualizer
     );
 
     const outward_annotator = new VideoAnnotator(outwardVideoElement,
-        annotation_manifest,
+        metadata,
         outwardCanvas,
-        [ "dsf", "inertial-bar", "header-banner", "outward-bounding-boxes"] // categories for renderers - matches extractor categories
+        ["debug-cross"] // Start with debug cross visualizer
     );
 
     // Attach annotators to the video elements so they can be accessed later
@@ -267,11 +255,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (id) {
             getMetadata(id)
                 .then(metadata => {
-                    const annotation_manifest = MetadataToAnnotationConverter.convertToManifest(metadata,['dsf','inertial-bar','header-banner','outward-bounding-boxes']); // categories for extractor
-                    console.log('Annotation Manifest:', annotation_manifest);
+                    console.log('Metadata:', metadata);
                     
-                    // Reinitialize video annotators with the actual annotation manifest
-                    setupVideoAnnotatorsWithManifest(annotation_manifest);
+                    // Initialize video annotators with metadata directly
+                    setupVideoAnnotatorsWithMetadata(metadata);
                     
                     // Enable rendering
                     // draw_annotations(annotation_manifest);
