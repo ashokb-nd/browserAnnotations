@@ -31,9 +31,11 @@ import { BaseRenderer } from "./base-renderer.js";
  * RENDERING BEHAVIOR:
  * ==================
  * - Converts normalized coordinates (0-1) to canvas pixel coordinates
- * - Draws two lane calibration lines using the four provided points
- * - Optionally displays red endpoint markers for debugging
- * - Lane lines represent the vanishing triangle calculation from DSF data
+ * - Draws lane calibration segments (already clipped to bottom 5% by extractor)
+ * - Uses light grey color for subtle lane calibration indicators
+ * - Optionally displays grey endpoint markers for debugging
+ * - Lane markings show calibration boundaries from DSF data
+ * - Simple line rendering since segments are pre-calculated by extractor
  * 
  * @example
  * // Lane calibration with endpoints
@@ -63,11 +65,11 @@ class DSFRenderer extends BaseRenderer {
 
   getDefaultOptions() {
     return {
-      defaultStrokeColor: "#00FF00", // Green
-      defaultLineWidth: 2,
-      defaultOpacity: 1.0,
+      defaultStrokeColor: "#C0C0C0", // Light grey
+      defaultLineWidth: 6, // Increased from 2 to 4 for better visibility
+      defaultOpacity: 0.8, // Slightly transparent
       defaultShowEndpoints: false, // Don't show endpoints by default
-      endpointColor: "#FF0000", // Red for endpoints
+      endpointColor: "#808080", // Darker grey for endpoints
       endpointRadius: 3
     };
   }

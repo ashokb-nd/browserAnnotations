@@ -28,18 +28,42 @@ function _getLaneCalMessage(metadata) {
   xInt = xInt.map(x => x * scale);
   imageHeight = CANONICAL_OUTWARD_IMAGE_HEIGHT;
 
-  // Create triangle: bottom corners to vanishing point
+  // Create short lane calibration segments: bottom corners to 5% up from bottom
+  // Instead of full triangle to vanishing point, create short calibration markings
   // Triangle vertices: 
-  // 1. Bottom left (xInt[0], imageHeight)
-  // 2. Bottom right (xInt[1], imageHeight) 
-  // 3. Vanishing point (vanishingPointEstimate[0], vanishingPointEstimate[1])
+  // 1. Bottom left (xInt[0], imageHeight) to 5% up along the lane line
+  // 2. Bottom right (xInt[1], imageHeight) to 5% up along the lane line
 
-  // Return normalized coordinates (0-1 range) for the triangle
+  // Calculate 5% up from bottom
+  const calibrationHeight = imageHeight * 0.05; // 5% of image height
+  const topY = imageHeight - calibrationHeight; // Y coordinate for top of calibration segment
+  
+  // For each lane line, calculate where it would be at the 5% mark
+  // Left lane line direction vector from bottom to vanishing point
+  const leftDirX = vanishingPointEstimate[0] - xInt[0];
+  const leftDirY = vanishingPointEstimate[1] - imageHeight;
+  const leftLength = Math.sqrt(leftDirX * leftDirX + leftDirY * leftDirY);
+  
+  // Right lane line direction vector from bottom to vanishing point  
+  const rightDirX = vanishingPointEstimate[0] - xInt[1];
+  const rightDirY = vanishingPointEstimate[1] - imageHeight;
+  const rightLength = Math.sqrt(rightDirX * rightDirX + rightDirY * rightDirY);
+  
+  // Calculate end points at 5% height for each lane
+  const leftEndX = xInt[0] + (leftDirX / leftLength) * calibrationHeight;
+  const leftEndY = topY;
+  
+  const rightEndX = xInt[1] + (rightDirX / rightLength) * calibrationHeight;  
+  const rightEndY = topY;
+
+  // Return normalized coordinates (0-1 range) for the short calibration segments
   const laneCalMessage = [
-    // Left edge: bottom-left to vanishing point
-    [[xInt[0] / CANONICAL_OUTWARD_IMAGE_WIDTH, 1.0], [vanishingPointEstimate[0] / CANONICAL_OUTWARD_IMAGE_WIDTH, vanishingPointEstimate[1] / imageHeight]],
-    // Right edge: bottom-right to vanishing point
-    [[xInt[1] / CANONICAL_OUTWARD_IMAGE_WIDTH, 1.0], [vanishingPointEstimate[0] / CANONICAL_OUTWARD_IMAGE_WIDTH, vanishingPointEstimate[1] / imageHeight]]
+    // Left calibration segment: bottom-left to 5% up
+    [[xInt[0] / CANONICAL_OUTWARD_IMAGE_WIDTH, 1.0],
+     [leftEndX / CANONICAL_OUTWARD_IMAGE_WIDTH, leftEndY / imageHeight]],
+    // Right calibration segment: bottom-right to 5% up
+    [[xInt[1] / CANONICAL_OUTWARD_IMAGE_WIDTH, 1.0],
+     [rightEndX / CANONICAL_OUTWARD_IMAGE_WIDTH, rightEndY / imageHeight]]
   ];
 
   return laneCalMessage;
