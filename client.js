@@ -210,13 +210,13 @@ function setupVideoAnnotatorsWithMetadata(metadata){
     const inward_annotator = new VideoAnnotator(inwardVideoElement,
         metadata,
         inwardCanvas,
-        ["debug-cross"] // Start with debug cross visualizer
+        ["debug-cross", "dsf"] // Start with debug cross and DSF visualizers
     );
 
     const outward_annotator = new VideoAnnotator(outwardVideoElement,
         metadata,
         outwardCanvas,
-        ["debug-cross"] // Start with debug cross visualizer
+        ["debug-cross", "dsf"] // Start with debug cross and DSF visualizers
     );
 
     // Attach annotators to the video elements so they can be accessed later
