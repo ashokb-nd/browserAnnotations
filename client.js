@@ -84,20 +84,19 @@ function setupAnnotationCanvas(videoId, canvasId) {
         canvas.style.width = video.offsetWidth + 'px';
         canvas.style.height = video.offsetHeight + 'px';
 
-        function drawAnnotations() {
-            // Draw annotations if annotator exists and is visible
-            if (video.annotator && video.annotator.isVisible) {
-                drawAnnotationsOnCanvas(video.annotator, ctx, canvas, video.currentTime * 1000);
-            }
-            
-            // Continue animation loop
-            requestAnimationFrame(drawAnnotations);
-        }
+        // function drawAnnotations() {
+        //     // Draw annotations if annotator exists and is visible
+        //     if (video.annotator && video.annotator.isVisible) {
+        //         drawAnnotationsOnCanvas(video.annotator, ctx, canvas, video.currentTime * 1000);
+        //     }
 
-        // Start annotation rendering loop
-        video.addEventListener("play", () => {
-            drawAnnotations();
-        });
+        //     // Continue animation loop
+        //     requestAnimationFrame(drawAnnotations);
+        // }
+        
+        // video.addEventListener("play", () => {
+        //     // drawAnnotations();
+        // });
 
         // Update canvas display size when window resizes
         window.addEventListener("resize", () => {
